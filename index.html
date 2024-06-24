@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>foto-v</title>
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+  <main>
+
+    <pre id="header">
+.::::::::    .::::     .::: .::::::    .::::           .::         .::
+.::        .::    .::       .::      .::    .::         .::       .:: 
+.::      .::        .::     .::    .::        .::        .::     .::  
+.::::::  .::        .::     .::    .::        .::.:::::   .::   .::   
+.::      .::        .::     .::    .::        .::          .:: .::    
+.::        .::     .::      .::      .::     .::            .::::     
+.::          .::::          .::        .::::                 .::      
+</pre>
+
+    <span class="divider"></span>
+    <form id="form-upload">
+      <div class="drop-container" id="drop-container">
+        <span class="drop-title unselectable">
+          Drop file here
+        </span>
+        <span class="drop-title unselectable">
+          or
+        </span>
+        <span class="drop-title unselectable">
+          click / tap to upload
+        </span>
+        <input type="file" id="input-upload" accept="image/*" style="display: none;" multiple="false"></input>
+      </div>
+
+    </form>
+    <div class="restart-container" id="restart-container">
+      <button id="restart-button">Restart</button>
+    </div>
+    <section class="uploaded-image-container" id="uploaded-image-container">
+      <img id="uploaded-image" src="" alt="uploaded image" />
+    </section>
+    <div id="effects-section">
+      <details id="effects-details">
+        <summary>Effect</summary>
+        <div></div>
+        <div id="effects-container">
+          <div id="pan2end-radio-container">
+            <input type="radio" id="pan2end-radio" name="effects" value="pan2end">
+            <label id="pan2end-label" for="pan2end-radio">Pan2end</label>
+          </div>
+          <div id="zoom-radio-container">
+            <input type="radio" id="zoom-radio" name="effects" value="zoom">
+            <label id="zoom-label" for="zoom-radio">Zoom</label>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <section id="pan2end-section" class="pan2end-section">
+      <details>
+        <summary>Pan2end settings</summary>
+        <div class="inputs-grid">
+          <div>
+            <label>Pixels shift (per frame)</label>
+            <input type="number" id="pan2end-pixels-shift" name="pan2end-pixels-shift" placeholder=2 value=2 />
+          </div>
+          <div>
+            <label>Last frame repeat (in seconds)</label>
+            <input type="number" id="pan2end-last-frame" name="pan2end-last-frame" placeholder=0 value=0 />
+          </div>
+
+        </div>
+      </details>
+    </section>
+    <section id="zoomout-section" class="zoomout-section">
+      <details>
+        <summary>Zoom Out settings</summary>
+        <div class="inputs-grid">
+          <div>
+            <label>Pixels shift (per frame)</label>
+            <input type="number" id="zoomout-pixels-shift" name="zoomout-pixels-shift" placeholder=2 value=2 />
+          </div>
+          <div>
+            <label>Total frames</label>
+            <input type="number" id="zoomout-total-frames" name="zoomout-total-frames" placeholder=60 value=60 />
+          </div>
+          <div>
+            <label>Last frame repeat (in seconds)</label>
+            <input type="number" id="zoomout-last-frame" name="zoomout-last-frame" placeholder=0 value=0 />
+          </div>
+          <div>
+            <label for="zoomout-fit">Zoom fit</label>
+            <select name="zoomout-fit" id="zoomout-fit">
+              <option value="fitHeight">Height</option>
+              <option value="fitWidth">Width</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </section>
+    <section id="output-section" class="output-section">
+      <details>
+        <summary>Output video</summary>
+        <div class="output-container">
+          <div class="inputs-grid">
+            <div>
+              <label for="size-presets">Size presets</label>
+              <select name="size-presets" id="size-presets">
+                <option value="9:16">9:16 (1080 x 1920)</option>
+                <option value="2:3">2:3 (1080 x 1620)</option>
+                <option value="4:5">4:5 (1080 x 1350)</option>
+                <option value="1:1">1:1 (1080 x 1080)</option>
+                <option value="3:2">3:2 (1620 x 1080)</option>
+                <option value="5:4">5:4 (1350 x 1080)</option>
+                <option value="16:9">16:9 (1920 x 1080)</option>
+              </select>
+            </div>
+            <div>
+              <label>Height</label>
+              <input type="number" id="canvas-height" name="canvas-height" placeholder=1920 value=1920 />
+            </div>
+            <div>
+              <label>Width</label>
+              <input type="number" id="canvas-width" name="canvas-width" placeholder=1080 value=1080 />
+            </div>
+            <div>
+              <label>Downscale, divide by </label>
+              <input type="number" id="divide-by" name="divide-by" placeholder=2 value=2 />
+            </div>
+            <div>
+              <label>Frame rate</label>
+              <input type="number" id="frame-rate" name="frame-rate" placeholder=30 value=30 />
+            </div>
+            <div class="divider"></div>
+          </div>
+          <div id="canvas-container">
+            <canvas style="width: 100%; height: 100%" id="mi-canvas"></canvas>
+          </div>
+        </div>
+      </details>
+    </section>
+
+
+    <div id="create-video-container">
+      <div id="screen-log-container">
+        <div id="screen-log" class="screen-log"></div>
+      </div>
+      <div><button id="create-video-button">CREATE VIDEO</button></div>
+      <div><button id="download-button">DOWNLOAD VIDEO</button></div>
+
+      <!-- <button id="btn-pan2end">Generar Vid: Pan2end</button>
+      <button id="btn-zoom-out">Generar Vid: zoomOut</button> -->
+    </div>
+    <div>
+    </div>
+  </main>
+  <script type="module" src="main.js" async defer></script>
+</body>
+
+</html>

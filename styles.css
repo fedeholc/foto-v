@@ -1,0 +1,413 @@
+/*  
+
+https: //lospec.com/palette-list/tokyo-night
+*/
+
+:root {
+  --background: var(--color1);
+  --labelFont: var(--color14);
+  --inputFont: var(--color16);
+  --inputBG: var(--color2);
+  --inputBorder: var(--color7);
+  --inputFocusBorder: var(--color14);
+
+  --button: var(--color20);
+  --buttonBG: var(--color1);
+  --buttonShadow: var(--color3);
+
+  --divider: var(--color3);
+
+  --drop: var(--color18);
+  --dropHover: var(--color20);
+
+  --imageBorder: var(--midGray20);
+
+  --disabledGray: var(--midgray80);
+
+  --midgray80: rgba(128, 128, 128, 0.8);
+  --midGray20: rgba(128, 128, 128, 0.2);
+
+  --color1: #1f2335;
+  --color1b: hsl(229, 20%, 16%);
+  --color2: #24283b;
+  --color3: #292e42;
+  --color4: #3b4261;
+  --color5: #414868;
+  --color6: #545c7e;
+  --color7: #565f89;
+  --color8: #737aa2;
+  --color9: #a9b1d6;
+  --color10: #c0caf5;
+  --color11: #394b70;
+  --color12: #3d59a1;
+  --color13: #7aa2f7;
+  --color14: #7dcfff;
+  --color15: #b4f9f8;
+  --color16: #bb9af7;
+  --color17: #9d7cd8;
+  --color18: #ff9e64;
+  --color19: #ffc777;
+  --color20: #c3e88d;
+  --color21: #4fd6be;
+  --color22: #41a6b5;
+  --color23: #ff757f;
+  --color24: #c53b53;
+  --color25: #ff007c;
+
+  font-size: 16px;
+
+}
+
+
+/*
+  1. Use a more-intuitive box-sizing model.
+*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+  2. Remove default margin
+*/
+* {
+  margin: 0;
+}
+
+/*
+  6. Remove built-in form typography styles
+*/
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/*
+  7. Avoid text overflows
+*/
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+::selection {
+  color: var(--color19);
+  background-color: var(--color1b);
+}
+
+
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background-color: var(--background);
+  color: var(--labelFont);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+button,
+input::file-selector-button {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--button);
+  background-color: var(--buttonBG);
+  color: var(--button);
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px 0px var(--buttonShadow);
+}
+
+
+button:hover {
+  background-color: var(--button);
+  color: var(--buttonBG);
+}
+
+/* button.disabled-gray {
+  background-color: var(--buttonBG);
+  border: 1px solid var(--disabledGray);
+  color: var(--disabledGray);
+  box-shadow: 4px 4px 0px 0px var(--buttonShadow);
+  cursor: not-allowed;
+} */
+
+/* input,
+select {
+  padding: 0.3rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--inputBorder);
+  background-color: var(--inputBG);
+  color: var(--inputFont);
+  border-radius: 0px;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--inputFocusBorder);
+} */
+
+input,
+select {
+  padding: 0.3rem;
+  font-size: 0.9rem;
+  border: none;
+  border-bottom: 2px solid var(--inputBorder);
+  background-color: var(--inputBG);
+  color: var(--inputFont);
+  border-radius: 0px;
+  text-align: right;
+}
+
+input[type="number"] {
+  max-width: 64px;
+}
+
+input:focus,
+select:focus {
+  border-bottom: 2px solid var(--inputBG);
+  outline: 2px solid var(--inputBorder);
+}
+
+
+canvas {
+  display: block;
+}
+
+section {
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+
+  padding: 1rem;
+  border: 1px solid var(--color6);
+}
+
+pre#header {
+  font-size: 0.4rem;
+  text-align: center;
+  font-weight: 1000;
+  color: var(--color22);
+  overflow: hidden;
+}
+
+@media (min-width: 400px) {
+  pre#header {
+    font-size: 0.5rem;
+  }
+}
+
+@media (min-width: 500px) {
+  pre#header {
+    font-size: 0.6rem;
+  }
+}
+
+
+summary {
+  cursor: pointer;
+  padding-bottom: 1rem;
+  color: var(--color13);
+}
+
+details[open] summary {
+  color: var(--color15);
+}
+
+
+.inputs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* .inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+
+  label {
+    text-align: right;
+  }
+} */
+
+.unselectable {
+  user-select: none;
+}
+
+.drop-container {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 5rem 5rem;
+  border: 2px dashed var(--drop);
+  cursor: pointer;
+}
+
+
+
+.drop-title {
+  color: var(--drop);
+  padding: 1.2rem 0.5rem;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+
+
+.drop-container:hover .drop-title,
+.drop-title-dragover {
+  color: var(--dropHover);
+}
+
+.drop-container:hover,
+.drop-container-dragover {
+  border: 2px dashed var(--dropHover);
+
+}
+
+.hidden {
+  display: none;
+}
+
+.restart-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.divider {
+  border-top: 1px solid var(--divider);
+}
+
+.label-selected {
+  color: var(--color21);
+}
+
+#create-video-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#create-video-container>div {
+  display: flex;
+  flex-direction: row;
+  place-content: center;
+}
+
+#effects-section summary {
+  padding: 1rem;
+}
+
+#effects-container .container-selected {
+  border: 2px solid var(--color16);
+
+  background-color: var(--color2);
+}
+
+#uploaded-image {
+  max-width: 250px;
+}
+
+.uploaded-image-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  border: 1px solid var(--imageBorder);
+}
+
+#form-upload:hover {
+  cursor: pointer;
+}
+
+
+
+
+.screen-log {
+  max-width: 300px;
+  height: 100px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--color1b);
+  color: var(--color19);
+  padding: 1rem;
+  border: 2px dashed var(--color19);
+}
+
+#effects-section {
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--midGray20);
+}
+
+#effects-container {
+  display: flex;
+  flex-direction: column;
+  /*   padding: 1rem;
+ */
+}
+
+#effects-container>div {
+  padding: 1rem;
+  cursor: pointer;
+  /*   border: 1px solid transparent;
+ */
+
+}
+
+#effects-container>div:hover {
+  /*   outline: 2px solid var(--color19);
+ */
+  color: var(--color21);
+  background-color: var(--color2);
+}
+
+#effects-container label,
+#effects-container input {
+  cursor: pointer;
+  accent-color: var(--color21);
+}
+
+#canvas-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+  align-content: center;
+  max-width: 250px;
+}
+
+.output-container {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
