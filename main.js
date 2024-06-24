@@ -311,6 +311,10 @@ async function handlePan2end() {
     document.querySelector("#pan2end-last-frame")
   );
 
+  const selectPanDirection = /** @type {HTMLSelectElement} */ (
+    document.querySelector("#pan-direction")
+  );
+
   let videoFrames = await createFramesPan2end(
     canvas,
     img,
@@ -325,12 +329,37 @@ async function handlePan2end() {
     parseInt(inputFrameRate.value),
     parseInt(inputLastFrameRepeat.value)
   );
+
+  const PanDirection = selectPanDirection.value;
+
+  //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
+  //FIXME: ojo, volvio a tirar el error de no divisible por 2.
+  if (PanDirection === "LR") {
+    videoToDownload = video;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "RL") {
+    let reversedVideo = await reverseVideo(video);
+    videoToDownload = reversedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "LRRL") {
+    let reversedVideo = await reverseVideo(video);
+    let concatenedVideo = await concatVideos(video, reversedVideo);
+    videoToDownload = concatenedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "RLLR") {
+    let reversedVideo = await reverseVideo(video);
+    let concatenedVideo = await concatVideos(reversedVideo, video);
+    videoToDownload = concatenedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
   //console.log("fin ffmpeg  ", Date.now() - inicio);
-  GlobalScreenLogger.log(`Your video is ready!`);
-
-  videoToDownload = video;
-
-  downloadVideoButton.classList.remove("hidden");
 }
 
 async function handleZoomOut() {
@@ -469,6 +498,61 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
 
       GlobalScreenLogger.log(`> Step 4 of 4 <br> 
         > Writing video file`);
+
+      let rta = ffmpeg.readFile("output.mp4");
+      console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrta", rta);
+      resolve(rta);
+    });
+  });
+}
+
+async function reverseVideo(video) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      const blob = new Blob([video.buffer], { type: "video/mp4" });
+      await ffmpeg.writeFile(`input.mp4`, blob);
+
+      // no cambiar el orden de estos parametros porque se rompe
+
+      await ffmpeg.exec([
+        "-i",
+        "input.mp4", // Plantilla de entrada
+        "-vf",
+        "reverse", // Filtro para extender el último frame
+        "-af",
+        "areverse",
+        "output.mp4",
+      ]);
+
+      let rta = ffmpeg.readFile("output.mp4");
+      resolve(rta);
+    });
+  });
+}
+
+async function concatVideos(video1, video2) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      const blob1 = new Blob([video1.buffer], { type: "video/mp4" });
+      const blob2 = new Blob([video2.buffer], { type: "video/mp4" });
+
+      await ffmpeg.writeFile(`input1.mp4`, blob1);
+      await ffmpeg.writeFile(`input2.mp4`, blob2);
+
+      //ffmpeg -i videop1.mp4 -i videop2.mp4 -filter_complex "[0:v:0][1:v:0]concat=n=2:v=1[outv]" -map "[outv]" output.mp4
+      // no cambiar el orden de estos parametros porque se rompe
+
+      await ffmpeg.exec([
+        "-i",
+        "input1.mp4", // Plantilla de entrada
+        "-i",
+        "input2.mp4", // Filtro para extender el último frame
+        "-filter_complex",
+        "[0:v:0][1:v:0]concat=n=2:v=1[outv]",
+        "-map",
+        "[outv]",
+        "output.mp4",
+      ]);
 
       let rta = ffmpeg.readFile("output.mp4");
       resolve(rta);
