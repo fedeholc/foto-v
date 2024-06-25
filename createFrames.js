@@ -19,7 +19,7 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
     let videoFrames = [];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(step);
-    let counter = 1;
+    let counter = 1; //FIXME debería ser 0?
 
     function step() {
       //console.log("step", counter, (img.width - canvas.width) / pixelsShift);
@@ -34,6 +34,49 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
       videoFrames.push(canvas.toDataURL("image/png"));
       counter++;
       if (counter * pixelsShift <= img.width - canvas.width) {
+        requestAnimationFrame(step);
+      } else {
+        resolve(videoFrames);
+      }
+    }
+  });
+}
+
+export function createFramesPan2end2(
+  canvas,
+  img,
+  pixelsShift,
+  counter,
+  counterTo
+) {
+  return new Promise((resolve, reject) => {
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      return reject(new Error("Error obtaining 2d context from canvas"));
+    }
+    if (!img.complete) {
+      return reject(new Error("Image not loaded"));
+    }
+
+    let videoFrames = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    requestAnimationFrame(step);
+
+    function step() {
+      //console.log("step", counter, (img.width - canvas.width) / pixelsShift);
+      GlobalScreenLogger.log(
+        `> Step 1 of 4 <br>
+        > Creating frame ${counter} of ${counterTo}`
+      );
+
+      ctx.drawImage(img, 0 - counter * pixelsShift, 0, img.width, img.height);
+      videoFrames.push(canvas.toDataURL("image/png"));
+      counter++;
+      if (
+        counter * pixelsShift <= img.width - canvas.width &&
+        counter < counterTo
+      ) {
         requestAnimationFrame(step);
       } else {
         resolve(videoFrames);

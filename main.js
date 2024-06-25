@@ -8,7 +8,11 @@
 //
 import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
-import { createFramesPan2end, createFramesZoomOut } from "./createFrames.js";
+import {
+  createFramesPan2end,
+  createFramesPan2end2,
+  createFramesZoomOut,
+} from "./createFrames.js";
 
 //
 //* DOM elements and event listeners
@@ -315,25 +319,71 @@ async function handlePan2end() {
     document.querySelector("#pan-direction")
   );
 
-  let videoFrames = await createFramesPan2end(
+  /*   let videoFrames = await createFramesPan2end(
     canvas,
     img,
     parseInt(inputPixelsShift.value)
+  ); */
+
+  //counter * pixelsShift <= img.width - canvas.width
+  let totalFrames = Math.floor(
+    (img.width - canvas.width) / parseInt(inputPixelsShift.value)
   );
+
+  //let frame = 1 //FIXME: o 0?
+
+  console.log("holi", totalFrames);
+  let videos = [];
+  for (let frame = 1; frame <= totalFrames; frame += 150) {
+    let videoFrames = await createFramesPan2end2(
+      canvas,
+      img,
+      parseInt(inputPixelsShift.value),
+      frame,
+      frame + 150
+    );
+
+    let video = await createVideo(
+      videoFrames,
+      parseInt(inputFrameRate.value),
+      parseInt(inputLastFrameRepeat.value)
+    );
+    videos.push(video);
+
+    console.log(`creado video ${frame} a ${frame + 150}`);
+  }
+
+  videoToDownload = videos[0];
+
+  for (let i = 1; i < videos.length; i++) {
+    GlobalScreenLogger.log(
+      `> Step ? <br>
+        > Concat video ${i + 1} of ${videos.length}`
+    );
+    videoToDownload = await concatVideos(videoToDownload, videos[i]);
+  }
+  downloadVideoButton.classList.remove("hidden");
+
+  //FIXME: que las funcioens de video devuelvan promise con tipo de dato y no any
+
+  //TODO: en lugar del screenlogger hay que usar un event que emita el proceso y que el screenlogger escuche ese evento
+
   //console.log("fin creación frames  ", Date.now() - inicio);
 
   //var inicio = Date.now();
   //console.log("inicio de ffmpeg", Date.now());
-  let video = await createVideo(
+
+  /* let video = await createVideo(
     videoFrames,
     parseInt(inputFrameRate.value),
     parseInt(inputLastFrameRepeat.value)
-  );
+  ); */
 
-  const PanDirection = selectPanDirection.value;
-
+  /*   const PanDirection = selectPanDirection.value;
+   */
   //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
   //FIXME: ojo, volvio a tirar el error de no divisible por 2.
+  /* 
   if (PanDirection === "LR") {
     videoToDownload = video;
     downloadVideoButton.classList.remove("hidden");
@@ -357,7 +407,7 @@ async function handlePan2end() {
     let concatenedVideo = await concatVideos(reversedVideo, video);
     videoToDownload = concatenedVideo;
     downloadVideoButton.classList.remove("hidden");
-  }
+  } */
 
   //console.log("fin ffmpeg  ", Date.now() - inicio);
 }
@@ -500,7 +550,12 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
         > Writing video file`);
 
       let rta = ffmpeg.readFile("output.mp4");
-      console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrta", rta);
+
+      for (let i = 0; i < videoFrames.length; i++) {
+        ffmpeg.deleteFile(`input${i + 1}.png`);
+      }
+      ffmpeg.deleteFile("output.mp4");
+
       resolve(rta);
     });
   });
@@ -555,6 +610,11 @@ async function concatVideos(video1, video2) {
       ]);
 
       let rta = ffmpeg.readFile("output.mp4");
+
+      ffmpeg.deleteFile("input1.mp4");
+      ffmpeg.deleteFile("input2.mp4");
+      ffmpeg.deleteFile("output.mp4");
+
       resolve(rta);
     });
   });
