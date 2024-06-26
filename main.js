@@ -391,16 +391,9 @@ async function handlePan2end() {
   logger.push(`fin concat... ${now}`);
   console.log(logger);
 
-  //FIXME: que las funcioens de video devuelvan promise con tipo de dato y no any
-
-  //TODO: en lugar del screenlogger hay que usar un event que emita el proceso y que el screenlogger escuche ese evento
-
   //console.log("fin creación frames  ", Date.now() - inicio);
 
   const PanDirection = selectPanDirection.value;
-
-  //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
-  //FIXME: ojo, volvio a tirar el error de no divisible por 2.
 
   // TODO volver a poner esto
   // TODO probar liberar memoria con null
