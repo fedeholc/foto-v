@@ -333,9 +333,9 @@ async function handlePan2end() {
   ); */
 
   //counter * pixelsShift <= img.width - canvas.width
-  let totalFrames = Math.floor(
-    (img.width - canvas.width) / parseInt(inputPixelsShift.value)
-  );
+  let totalFrames =
+    Math.floor((img.width - canvas.width) / parseInt(inputPixelsShift.value)) +
+    1;
 
   //let frame = 1 //FIXME: o 0?
 
@@ -347,8 +347,8 @@ async function handlePan2end() {
       canvas,
       img,
       parseInt(inputPixelsShift.value),
-      frame,
-      frame + chunkSize
+      frame - 1,
+      frame + chunkSize - 1
     );
 
     let video = await createVideo(
@@ -377,7 +377,6 @@ async function handlePan2end() {
 
   now = new Date();
   logger.push(`fin concat... ${now}`);
-
   console.log(logger);
 
   //FIXME: que las funcioens de video devuelvan promise con tipo de dato y no any

@@ -191,7 +191,7 @@ select:focus {
 
 
 canvas {
-  display: none;
+  display: block;
 }
 
 section {
