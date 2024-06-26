@@ -591,18 +591,13 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       for (let i = 0; i < videoFrames.length; i++) {
-        console.log("frame", i);
         GlobalScreenLogger.log(
-          `> Step 2 of 4 <br> 
-           > Writing frame ${i + 1} of ${videoFrames.length + 1}`
+          `> Writing frame ${i + 1} of ${videoFrames.length + 1}`
         );
         await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
       }
 
-      GlobalScreenLogger.log(
-        `> Step 3 of 4<br> 
-         > Creating video (it may take a while...)`
-      );
+      GlobalScreenLogger.log(`> Creating video (it may take a while...)`);
       // no cambiar el orden de estos parametros porque se rompe
       await ffmpeg.exec([
         "-framerate",
@@ -618,8 +613,9 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
         "output.mp4",
       ]);
 
-      GlobalScreenLogger.log(`> Step 4 of 4 <br> 
-        > Writing video file`);
+      //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
+
+      GlobalScreenLogger.log(`> Writing video file`);
 
       let rta = ffmpeg.readFile("output.mp4");
 
