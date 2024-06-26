@@ -94,12 +94,14 @@ GlobalScreenLogger.log(
   "Hola, mundo! <br> Hola, mundo! Hola, mundo! Hola, mundo!"
 );
 
+let logger = [];
 const ctx = canvas.getContext("2d");
 const ffmpeg = new FFmpeg({
   config: "gpl-extended",
 });
 const img = new Image();
 
+/** @typedef {{buffer: BlobPart}} */
 let videoToDownload;
 
 initUI();
@@ -296,6 +298,11 @@ async function handlePan2end() {
   //var inicio = Date.now();
   //console.log("start creación frames  ", Date.now());
 
+  logger = [];
+
+  let now = new Date();
+  logger.push(`inicio handlePan... ${now}`);
+
   createVideoButton.classList.add("hidden");
 
   GlobalScreenLogger.log(`Let's go!`);
@@ -334,13 +341,14 @@ async function handlePan2end() {
 
   console.log("holi", totalFrames);
   let videos = [];
-  for (let frame = 1; frame <= totalFrames; frame += 150) {
+  let chunkSize = 100;
+  for (let frame = 1; frame <= totalFrames; frame += chunkSize) {
     let videoFrames = await createFramesPan2end2(
       canvas,
       img,
       parseInt(inputPixelsShift.value),
       frame,
-      frame + 150
+      frame + chunkSize
     );
 
     let video = await createVideo(
@@ -350,8 +358,11 @@ async function handlePan2end() {
     );
     videos.push(video);
 
-    console.log(`creado video ${frame} a ${frame + 150}`);
+    console.log(`creado video ${frame} a ${frame + chunkSize}`);
   }
+
+  now = new Date();
+  logger.push(`inicio concat videos... ${now}`);
 
   videoToDownload = videos[0];
 
@@ -363,6 +374,11 @@ async function handlePan2end() {
     videoToDownload = await concatVideos(videoToDownload, videos[i]);
   }
   downloadVideoButton.classList.remove("hidden");
+
+  now = new Date();
+  logger.push(`fin concat... ${now}`);
+
+  console.log(logger);
 
   //FIXME: que las funcioens de video devuelvan promise con tipo de dato y no any
 
@@ -408,6 +424,80 @@ async function handlePan2end() {
     videoToDownload = concatenedVideo;
     downloadVideoButton.classList.remove("hidden");
   } */
+
+  //console.log("fin ffmpeg  ", Date.now() - inicio);
+}
+
+async function handlePan2endNOSPLIT() {
+  //var inicio = Date.now();
+  //console.log("start creación frames  ", Date.now());
+
+  createVideoButton.classList.add("hidden");
+
+  GlobalScreenLogger.log(`Let's go!`);
+  screenLogContainer.classList.add("screen-log");
+  screenLogContainer.classList.remove("hidden");
+
+  // sets the canvas size and the image size acording to the inputs
+  configSizes();
+
+  const inputPixelsShift = /** @type {HTMLInputElement} */ (
+    document.querySelector("#pan2end-pixels-shift")
+  );
+  const inputFrameRate = /** @type {HTMLInputElement} */ (
+    document.querySelector("#frame-rate")
+  );
+  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
+    document.querySelector("#pan2end-last-frame")
+  );
+
+  const selectPanDirection = /** @type {HTMLSelectElement} */ (
+    document.querySelector("#pan-direction")
+  );
+
+  let videoFrames = await createFramesPan2end(
+    canvas,
+    img,
+    parseInt(inputPixelsShift.value)
+  );
+
+  //console.log("fin creación frames  ", Date.now() - inicio);
+
+  //var inicio = Date.now();
+  //console.log("inicio de ffmpeg", Date.now());
+
+  let video = await createVideo(
+    videoFrames,
+    parseInt(inputFrameRate.value),
+    parseInt(inputLastFrameRepeat.value)
+  );
+
+  const PanDirection = selectPanDirection.value;
+
+  if (PanDirection === "LR") {
+    videoToDownload = video;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "RL") {
+    let reversedVideo = await reverseVideo(video);
+    videoToDownload = reversedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "LRRL") {
+    let reversedVideo = await reverseVideo(video);
+    let concatenedVideo = await concatVideos(video, reversedVideo);
+    videoToDownload = concatenedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
+
+  if (PanDirection === "RLLR") {
+    let reversedVideo = await reverseVideo(video);
+    let concatenedVideo = await concatVideos(reversedVideo, video);
+    videoToDownload = concatenedVideo;
+    downloadVideoButton.classList.remove("hidden");
+  }
 
   //console.log("fin ffmpeg  ", Date.now() - inicio);
 }
@@ -585,6 +675,11 @@ async function reverseVideo(video) {
   });
 }
 
+/**
+ * @param {{ buffer: BlobPart; }} video1
+ * @param {{ buffer: BlobPart; }} video2
+ * @returns {Promise<{ buffer: BlobPart; }>}
+ */
 async function concatVideos(video1, video2) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
@@ -597,7 +692,7 @@ async function concatVideos(video1, video2) {
       //ffmpeg -i videop1.mp4 -i videop2.mp4 -filter_complex "[0:v:0][1:v:0]concat=n=2:v=1[outv]" -map "[outv]" output.mp4
       // no cambiar el orden de estos parametros porque se rompe
 
-      await ffmpeg.exec([
+      /* await ffmpeg.exec([
         "-i",
         "input1.mp4", // Plantilla de entrada
         "-i",
@@ -606,6 +701,24 @@ async function concatVideos(video1, video2) {
         "[0:v:0][1:v:0]concat=n=2:v=1[outv]",
         "-map",
         "[outv]",
+        "output.mp4",
+      ]); */
+
+      const blobFileList = new Blob(["file 'input1.mp4'\nfile 'input2.mp4'"], {
+        type: "text/plain",
+      });
+      await ffmpeg.writeFile("filelist.txt", blobFileList);
+
+      //ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
+      await ffmpeg.exec([
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        "filelist.txt",
+        "-c",
+        "copy",
         "output.mp4",
       ]);
 
