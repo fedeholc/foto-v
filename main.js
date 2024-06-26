@@ -336,7 +336,8 @@ async function handlePan2end() {
   console.log("Total frames: ", totalFrames);
 
   let videos = [];
-  let chunkSize = 100;
+  let reversedVideos = [];
+  let chunkSize = 50;
   for (let i = 0; i < totalFrames; i += chunkSize) {
     let videoFrames = await createFramesPanByChunks(
       canvas,
@@ -353,6 +354,16 @@ async function handlePan2end() {
     );
     videos.push(video);
 
+    // VER La de reverseVideo hizo que ubuntu me tire que se quedò sin memoria, lo mismo chrome, pero despué continuó el proceso y funcionó.
+    // VER  La de create video con el array de frames invertido funcionó sin problemas. Pero se podría hacer algo mejor que es tomar los frames ya creados dentro de create video y generar ahì tanto el video como su invertido para no tener que repetir el write files que hace createVideo
+    //let revertedVideo = await reverseVideo(video);
+    let revertedVideo = await createVideo(
+      videoFrames.reverse(),
+      parseInt(inputFrameRate.value),
+      parseInt(inputLastFrameRepeat.value)
+    );
+    reversedVideos.push(revertedVideo);
+
     console.log(`Completé video ${i} a ${i + chunkSize}`);
   }
 
@@ -365,7 +376,16 @@ async function handlePan2end() {
     GlobalScreenLogger.log(`> Concat video ${i + 1} of ${videos.length}`);
     tempVideo = await concatVideos(tempVideo, videos[i]);
   }
-  //downloadVideoButton.classList.remove("hidden");
+
+  for (let i = 1; i <= reversedVideos.length; i++) {
+    GlobalScreenLogger.log(
+      `> Concat video ${i + 1} of ${reversedVideos.length}`
+    );
+    tempVideo = await concatVideos(
+      tempVideo,
+      reversedVideos[reversedVideos.length - i]
+    );
+  }
 
   now = new Date();
   logger.push(`fin concat... ${now}`);
@@ -381,7 +401,7 @@ async function handlePan2end() {
 
   //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
   //FIXME: ojo, volvio a tirar el error de no divisible por 2.
-
+  /* 
   if (PanDirection === "LR") {
     videoToDownload = tempVideo;
     downloadVideoButton.classList.remove("hidden");
@@ -406,8 +426,11 @@ async function handlePan2end() {
     videoToDownload = concatenedVideo;
     downloadVideoButton.classList.remove("hidden");
   }
-
+ */
   GlobalScreenLogger.log(`> Done!`);
+
+  videoToDownload = tempVideo;
+  downloadVideoButton.classList.remove("hidden");
 }
 
 async function handlePan2endNOSPLIT() {
@@ -641,13 +664,9 @@ async function reverseVideo(video) {
 
       // no cambiar el orden de estos parametros porque se rompe
 
-      // ffmpeg -i input.mp4 -c copy cleaned.mp4
-
-      await ffmpeg.exec(["-i", "inputR.mp4", "-c", "copy", "cleaned.mp4"]);
-
       await ffmpeg.exec([
         "-i",
-        "cleaned.mp4", // Plantilla de entrada
+        "inputR.mp4", // Plantilla de entrada
         "-vf",
         "reverse",
         /*         "-af",
@@ -656,6 +675,9 @@ async function reverseVideo(video) {
       ]);
 
       let rta = ffmpeg.readFile("outputR.mp4");
+
+      ffmpeg.deleteFile("inputR.mp4");
+      ffmpeg.deleteFile("outputR.mp4");
       resolve(rta);
     });
   });
