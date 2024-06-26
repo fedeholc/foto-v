@@ -629,25 +629,33 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
   });
 }
 
+/**
+ * @param {{ buffer: BlobPart; }} video
+ */
 async function reverseVideo(video) {
+  console.log("video en reverse: ", video);
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       const blob = new Blob([video.buffer], { type: "video/mp4" });
-      await ffmpeg.writeFile(`input.mp4`, blob);
+      await ffmpeg.writeFile(`inputR.mp4`, blob);
 
       // no cambiar el orden de estos parametros porque se rompe
 
+      // ffmpeg -i input.mp4 -c copy cleaned.mp4
+
+      await ffmpeg.exec(["-i", "inputR.mp4", "-c", "copy", "cleaned.mp4"]);
+
       await ffmpeg.exec([
         "-i",
-        "input.mp4", // Plantilla de entrada
+        "cleaned.mp4", // Plantilla de entrada
         "-vf",
-        "reverse", // Filtro para extender el último frame
-        "-af",
-        "areverse",
-        "output.mp4",
+        "reverse",
+        /*         "-af",
+        "areverse", */
+        "outputR.mp4",
       ]);
 
-      let rta = ffmpeg.readFile("output.mp4");
+      let rta = ffmpeg.readFile("outputR.mp4");
       resolve(rta);
     });
   });
