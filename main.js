@@ -401,6 +401,9 @@ async function handlePan2end() {
 
   //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
   //FIXME: ojo, volvio a tirar el error de no divisible por 2.
+
+  // TODO volver a poner esto
+  // TODO probar liberar memoria con null
   /* 
   if (PanDirection === "LR") {
     videoToDownload = tempVideo;
