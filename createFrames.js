@@ -42,13 +42,14 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
   });
 }
 
-export function createFramesPan2end2(
-  canvas,
-  img,
-  pixelsShift,
-  counter,
-  counterTo
-) {
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {number} pixelsShift
+ * @param {number} posX
+ * @param {number} toX
+ */
+export function createFramesPanByChunks(canvas, img, pixelsShift, posX, toX) {
   return new Promise((resolve, reject) => {
     const ctx = canvas.getContext("2d");
 
@@ -64,19 +65,12 @@ export function createFramesPan2end2(
     requestAnimationFrame(step);
 
     function step() {
-      //console.log("step", counter, (img.width - canvas.width) / pixelsShift);
-      GlobalScreenLogger.log(
-        `> Step 1 of 4 <br>
-        > Creating frame ${counter} of ${counterTo}`
-      );
+      GlobalScreenLogger.log(`> Creating frame ${posX} of ${toX}`);
 
-      ctx.drawImage(img, 0 - counter * pixelsShift, 0, img.width, img.height);
+      ctx.drawImage(img, 0 - posX * pixelsShift, 0, img.width, img.height);
       videoFrames.push(canvas.toDataURL("image/png"));
-      counter++;
-      if (
-        counter * pixelsShift <= img.width - canvas.width &&
-        counter < counterTo
-      ) {
+      posX++;
+      if (posX * pixelsShift <= img.width - canvas.width && posX < toX) {
         requestAnimationFrame(step);
       } else {
         resolve(videoFrames);

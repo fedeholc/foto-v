@@ -10,7 +10,7 @@ import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
   createFramesPan2end,
-  createFramesPan2end2,
+  createFramesPanByChunks,
   createFramesZoomOut,
 } from "./createFrames.js";
 
@@ -326,29 +326,24 @@ async function handlePan2end() {
     document.querySelector("#pan-direction")
   );
 
-  /*   let videoFrames = await createFramesPan2end(
-    canvas,
-    img,
-    parseInt(inputPixelsShift.value)
-  ); */
-
   //counter * pixelsShift <= img.width - canvas.width
+  //Calcula el total de frames en base a cuantos pixels se tiene que mover la imagen y considerando cuantos pixels se mueve por frame
+  //Suma uno porque son los movimientos más la posición inicial que también se tiene que mostrar.
   let totalFrames =
     Math.floor((img.width - canvas.width) / parseInt(inputPixelsShift.value)) +
     1;
 
-  //let frame = 1 //FIXME: o 0?
+  console.log("Total frames: ", totalFrames);
 
-  console.log("holi", totalFrames);
   let videos = [];
   let chunkSize = 100;
-  for (let frame = 1; frame <= totalFrames; frame += chunkSize) {
-    let videoFrames = await createFramesPan2end2(
+  for (let i = 0; i < totalFrames; i += chunkSize) {
+    let videoFrames = await createFramesPanByChunks(
       canvas,
       img,
       parseInt(inputPixelsShift.value),
-      frame - 1,
-      frame + chunkSize - 1
+      i,
+      i + chunkSize
     );
 
     let video = await createVideo(
@@ -358,22 +353,19 @@ async function handlePan2end() {
     );
     videos.push(video);
 
-    console.log(`creado video ${frame} a ${frame + chunkSize}`);
+    console.log(`Completé video ${i} a ${i + chunkSize}`);
   }
 
   now = new Date();
   logger.push(`inicio concat videos... ${now}`);
 
-  videoToDownload = videos[0];
+  let tempVideo = videos[0];
 
   for (let i = 1; i < videos.length; i++) {
-    GlobalScreenLogger.log(
-      `> Step ? <br>
-        > Concat video ${i + 1} of ${videos.length}`
-    );
-    videoToDownload = await concatVideos(videoToDownload, videos[i]);
+    GlobalScreenLogger.log(`> Concat video ${i + 1} of ${videos.length}`);
+    tempVideo = await concatVideos(tempVideo, videos[i]);
   }
-  downloadVideoButton.classList.remove("hidden");
+  //downloadVideoButton.classList.remove("hidden");
 
   now = new Date();
   logger.push(`fin concat... ${now}`);
@@ -385,46 +377,37 @@ async function handlePan2end() {
 
   //console.log("fin creación frames  ", Date.now() - inicio);
 
-  //var inicio = Date.now();
-  //console.log("inicio de ffmpeg", Date.now());
+  const PanDirection = selectPanDirection.value;
 
-  /* let video = await createVideo(
-    videoFrames,
-    parseInt(inputFrameRate.value),
-    parseInt(inputLastFrameRepeat.value)
-  ); */
-
-  /*   const PanDirection = selectPanDirection.value;
-   */
   //TODO: funciona PERO de esta forma la parte del reverse o concat no se ve en el preview
   //FIXME: ojo, volvio a tirar el error de no divisible por 2.
-  /* 
+
   if (PanDirection === "LR") {
-    videoToDownload = video;
+    videoToDownload = tempVideo;
     downloadVideoButton.classList.remove("hidden");
   }
 
   if (PanDirection === "RL") {
-    let reversedVideo = await reverseVideo(video);
+    let reversedVideo = await reverseVideo(tempVideo);
     videoToDownload = reversedVideo;
     downloadVideoButton.classList.remove("hidden");
   }
 
   if (PanDirection === "LRRL") {
-    let reversedVideo = await reverseVideo(video);
-    let concatenedVideo = await concatVideos(video, reversedVideo);
+    let reversedVideo = await reverseVideo(tempVideo);
+    let concatenedVideo = await concatVideos(tempVideo, reversedVideo);
     videoToDownload = concatenedVideo;
     downloadVideoButton.classList.remove("hidden");
   }
 
   if (PanDirection === "RLLR") {
-    let reversedVideo = await reverseVideo(video);
-    let concatenedVideo = await concatVideos(reversedVideo, video);
+    let reversedVideo = await reverseVideo(tempVideo);
+    let concatenedVideo = await concatVideos(reversedVideo, tempVideo);
     videoToDownload = concatenedVideo;
     downloadVideoButton.classList.remove("hidden");
-  } */
+  }
 
-  //console.log("fin ffmpeg  ", Date.now() - inicio);
+  GlobalScreenLogger.log(`> Done!`);
 }
 
 async function handlePan2endNOSPLIT() {
