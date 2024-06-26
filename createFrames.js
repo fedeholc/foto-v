@@ -4,6 +4,7 @@ import { GlobalScreenLogger } from "./screenLogger.js";
  * @param {number} pixelsShift
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLImageElement} img
+ * @returns {Promise<string[]>}
  */
 export function createFramesPan2end(canvas, img, pixelsShift) {
   return new Promise((resolve, reject) => {
@@ -43,11 +44,12 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas
+ * @param {HTMLCanvasElement} canvas 
  * @param {HTMLImageElement} img
  * @param {number} pixelsShift
  * @param {number} posX
  * @param {number} toX
+ * @returns {Promise<string[]>}
  */
 export function createFramesPanByChunks(canvas, img, pixelsShift, posX, toX) {
   return new Promise((resolve, reject) => {
@@ -85,7 +87,7 @@ export function createFramesPanByChunks(canvas, img, pixelsShift, posX, toX) {
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLImageElement} img
  * @param {("fitWidth" | "fitHeight")} fit adjust image to width or height
-
+ * @returns {Promise<string[]>}
  */
 export function createFramesZoomOut(
   canvas,
