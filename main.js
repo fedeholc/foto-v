@@ -357,12 +357,13 @@ async function handlePan2end() {
     // VER La de reverseVideo hizo que ubuntu me tire que se quedò sin memoria, lo mismo chrome, pero despué continuó el proceso y funcionó.
     // VER  La de create video con el array de frames invertido funcionó sin problemas. Pero se podría hacer algo mejor que es tomar los frames ya creados dentro de create video y generar ahì tanto el video como su invertido para no tener que repetir el write files que hace createVideo
     //let revertedVideo = await reverseVideo(video);
-    let revertedVideo = await createVideo(
+
+    /* let revertedVideo = await createVideo(
       videoFrames.reverse(),
       parseInt(inputFrameRate.value),
       parseInt(inputLastFrameRepeat.value)
     );
-    reversedVideos.push(revertedVideo);
+    reversedVideos.push(revertedVideo); */
 
     console.log(`Completé video ${i} a ${i + chunkSize}`);
   }
@@ -377,7 +378,7 @@ async function handlePan2end() {
     tempVideo = await concatVideos(tempVideo, videos[i]);
   }
 
-  for (let i = 1; i <= reversedVideos.length; i++) {
+  /* for (let i = 1; i <= reversedVideos.length; i++) {
     GlobalScreenLogger.log(
       `> Concat video ${i + 1} of ${reversedVideos.length}`
     );
@@ -385,7 +386,7 @@ async function handlePan2end() {
       tempVideo,
       reversedVideos[reversedVideos.length - i]
     );
-  }
+  } */
 
   now = new Date();
   logger.push(`fin concat... ${now}`);
