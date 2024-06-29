@@ -645,6 +645,7 @@ async function execCreateVideo(frameRate, lastFrameRepeat, reverse) {
  * @param {string[]} videoFrames
  * @param {number} frameRate
  * @param {number} lastFrameRepeat
+ * @returns {Promise<{ buffer: BlobPart; }>}
  */
 async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
   return new Promise((resolve, reject) => {
@@ -694,6 +695,7 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
 
 /**
  * @param {{ buffer: BlobPart; }} video
+ * @returns {Promise<{ buffer: BlobPart; }>}
  */
 async function reverseVideo(video) {
   console.log("video en reverse: ", video);
