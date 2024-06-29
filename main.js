@@ -13,6 +13,7 @@ import {
   createFramesPanByChunks,
   createFramesZoomOut,
 } from "./createFrames.js";
+import { execCreateVideo, concatAllVideos } from "./video.js";
 
 //
 //* DOM elements and event listeners
@@ -94,7 +95,6 @@ GlobalScreenLogger.log(
   "Hola, mundo! <br> Hola, mundo! Hola, mundo! Hola, mundo!"
 );
 
-let logger = [];
 const ctx = canvas.getContext("2d");
 const ffmpeg = new FFmpeg({
   config: "gpl-extended",
@@ -344,6 +344,7 @@ async function handlePan2end() {
     ) {
       videosForward.push(
         await execCreateVideo(
+          ffmpeg,
           parseInt(inputFrameRate.value),
           parseInt(inputLastFrameRepeat.value),
           false
@@ -358,6 +359,7 @@ async function handlePan2end() {
     ) {
       videosReversed.unshift(
         await execCreateVideo(
+          ffmpeg,
           parseInt(inputFrameRate.value),
           parseInt(inputLastFrameRepeat.value),
           true
@@ -381,7 +383,7 @@ async function handlePan2end() {
     deleteImageFiles(videoFrames.length);
   }
 
-  videoToDownload = await concatAllVideos(videos);
+  videoToDownload = await concatAllVideos(ffmpeg, videos);
 
   GlobalScreenLogger.log(`> Done!`);
 
@@ -593,53 +595,6 @@ async function deleteImageFiles(numberOfFrames) {
   });
 }
 
-/**
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @param {boolean} reverse
- * @returns {Promise<{ buffer: BlobPart; }>}
- */
-async function execCreateVideo(frameRate, lastFrameRepeat, reverse) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      let reverseParam = "";
-      if (reverse) {
-        reverseParam = "reverse,";
-      }
-
-      GlobalScreenLogger.log(`> Creating video (it may take a while...)`);
-      // no cambiar el orden de estos parametros porque se rompe
-      await ffmpeg.exec([
-        "-framerate",
-        `${frameRate}`,
-        "-i",
-        "input%d.png", // Plantilla de entrada
-        "-vf",
-        `${reverseParam}tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`, // Filtro para extender el último frame
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "output.mp4",
-      ]);
-      //VER
-      // FIXME agregar reverse al filter "reverse, tpad.."
-      // crea el vid en reversa, ver si es mas o menos rápido que convertir el video ya existente.
-      // ver de separar de la funcion la creación de imagenes para pasarlas como parámetro si vamos a crear el vid y su reverso.
-
-      //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
-
-      GlobalScreenLogger.log(`> Writing video file`);
-
-      let rta = ffmpeg.readFile("output.mp4");
-
-      ffmpeg.deleteFile("output.mp4");
-
-      resolve(rta);
-    });
-  });
-}
-
 //TODO: catch del error para el reject?
 /**
  * @param {string[]} videoFrames
@@ -761,55 +716,6 @@ async function concatVideos(video1, video2) {
 
       ffmpeg.deleteFile("input1.mp4");
       ffmpeg.deleteFile("input2.mp4");
-      ffmpeg.deleteFile("output.mp4");
-
-      resolve(rta);
-    });
-  });
-}
-
-/**
- * @param {{ buffer: BlobPart; }[]} videos
- * @returns {Promise<{ buffer: BlobPart; }>}
- */
-async function concatAllVideos(videos) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      for (let i = 0; i < videos.length; i++) {
-        await ffmpeg.writeFile(
-          `input${i + 1}.mp4`,
-          new Blob([videos[i].buffer], { type: "video/mp4" })
-        );
-      }
-
-      let blobfiles = "";
-      for (let i = 0; i < videos.length; i++) {
-        blobfiles += `file 'input${i + 1}.mp4'\n`;
-      }
-
-      const blobFileList = new Blob([blobfiles], {
-        type: "text/plain",
-      });
-      await ffmpeg.writeFile("filelist.txt", blobFileList);
-
-      await ffmpeg.exec([
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        "filelist.txt",
-        "-c",
-        "copy",
-        "output.mp4",
-      ]);
-
-      let rta = ffmpeg.readFile("output.mp4");
-
-      for (let i = 0; i < videos.length; i++) {
-        ffmpeg.deleteFile(`input${i + 1}.mp4`);
-      }
-
       ffmpeg.deleteFile("output.mp4");
 
       resolve(rta);
