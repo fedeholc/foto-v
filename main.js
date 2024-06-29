@@ -295,16 +295,7 @@ function handleDownloadVideo() {
 }
 
 async function handlePan2end() {
-  //var inicio = Date.now();
-  //console.log("start creación frames  ", Date.now());
-
-  logger = [];
-
-  let now = new Date();
-  logger.push(`inicio handlePan... ${now}`);
-
   createVideoButton.classList.add("hidden");
-
   GlobalScreenLogger.log(`Let's go!`);
   screenLogContainer.classList.add("screen-log");
   screenLogContainer.classList.remove("hidden");
@@ -321,21 +312,16 @@ async function handlePan2end() {
   const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
     document.querySelector("#pan2end-last-frame")
   );
-
   const selectPanDirection = /** @type {HTMLSelectElement} */ (
     document.querySelector("#pan-direction")
   );
   const PanDirection = selectPanDirection.value;
 
-  //counter * pixelsShift <= img.width - canvas.width
   //Calcula el total de frames en base a cuantos pixels se tiene que mover la imagen y considerando cuantos pixels se mueve por frame
   //Suma uno porque son los movimientos más la posición inicial que también se tiene que mostrar.
   let totalFrames =
     Math.floor((img.width - canvas.width) / parseInt(inputPixelsShift.value)) +
     1;
-
-  console.log("Total frames: ", totalFrames);
-
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
@@ -350,13 +336,6 @@ async function handlePan2end() {
     );
 
     await writeImageFiles(videoFrames);
-
-    /* let video = await createVideo(
-      videoFrames,
-      parseInt(inputFrameRate.value),
-      parseInt(inputLastFrameRepeat.value)
-    );
-    videos.push(video); */
 
     if (
       PanDirection === "LR" ||
@@ -400,80 +379,12 @@ async function handlePan2end() {
     }
 
     deleteImageFiles(videoFrames.length);
-
-    // VER La de reverseVideo hizo que ubuntu me tire que se quedò sin memoria, lo mismo chrome, pero despué continuó el proceso y funcionó.
-    // VER  La de create video con el array de frames invertido funcionó sin problemas. Pero se podría hacer algo mejor que es tomar los frames ya creados dentro de create video y generar ahì tanto el video como su invertido para no tener que repetir el write files que hace createVideo
-    //let revertedVideo = await reverseVideo(video);
-
-    /* let revertedVideo = await createVideo(
-      videoFrames.reverse(),
-      parseInt(inputFrameRate.value),
-      parseInt(inputLastFrameRepeat.value)
-    );
-    reversedVideos.push(revertedVideo); */
-
-    console.log(`Completé video ${i} a ${i + chunkSize}`);
   }
 
-  console.log("VIDS: ", videos);
-  now = new Date();
-  logger.push(`inicio concat videos... ${now}`);
-
-  let tempVideo = videos[0];
-
-  for (let i = 1; i < videos.length; i++) {
-    GlobalScreenLogger.log(`> Concat video ${i + 1} of ${videos.length}`);
-    tempVideo = await concatVideos(tempVideo, videos[i]);
-  }
-
-  /* for (let i = 1; i <= reversedVideos.length; i++) {
-    GlobalScreenLogger.log(
-      `> Concat video ${i + 1} of ${reversedVideos.length}`
-    );
-    tempVideo = await concatVideos(
-      tempVideo,
-      reversedVideos[reversedVideos.length - i]
-    );
-  } */
-
-  now = new Date();
-  logger.push(`fin concat... ${now}`);
-  console.log(logger);
-
-  //console.log("fin creación frames  ", Date.now() - inicio);
-
-  // TODO volver a poner esto
-  // TODO probar liberar memoria con null
-  /* 
-  if (PanDirection === "LR") {
-    videoToDownload = tempVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "RL") {
-    let reversedVideo = await reverseVideo(tempVideo);
-    videoToDownload = reversedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "LRRL") {
-    let reversedVideo = await reverseVideo(tempVideo);
-    let concatenedVideo = await concatVideos(tempVideo, reversedVideo);
-    videoToDownload = concatenedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "RLLR") {
-    let reversedVideo = await reverseVideo(tempVideo);
-    let concatenedVideo = await concatVideos(reversedVideo, tempVideo);
-    videoToDownload = concatenedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
- */
+  videoToDownload = await concatAllVideos(videos);
 
   GlobalScreenLogger.log(`> Done!`);
 
-  videoToDownload = tempVideo;
   downloadVideoButton.classList.remove("hidden");
 }
 
@@ -812,21 +723,6 @@ async function concatVideos(video1, video2) {
       await ffmpeg.writeFile(`input1.mp4`, blob1);
       await ffmpeg.writeFile(`input2.mp4`, blob2);
 
-      //ffmpeg -i videop1.mp4 -i videop2.mp4 -filter_complex "[0:v:0][1:v:0]concat=n=2:v=1[outv]" -map "[outv]" output.mp4
-      // no cambiar el orden de estos parametros porque se rompe
-
-      /* await ffmpeg.exec([
-        "-i",
-        "input1.mp4", // Plantilla de entrada
-        "-i",
-        "input2.mp4", // Filtro para extender el último frame
-        "-filter_complex",
-        "[0:v:0][1:v:0]concat=n=2:v=1[outv]",
-        "-map",
-        "[outv]",
-        "output.mp4",
-      ]); */
-
       const blobFileList = new Blob(["file 'input1.mp4'\nfile 'input2.mp4'"], {
         type: "text/plain",
       });
@@ -849,6 +745,52 @@ async function concatVideos(video1, video2) {
 
       ffmpeg.deleteFile("input1.mp4");
       ffmpeg.deleteFile("input2.mp4");
+      ffmpeg.deleteFile("output.mp4");
+
+      resolve(rta);
+    });
+  });
+}
+
+async function concatAllVideos(videos) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      for (let i = 0; i < videos.length; i++) {
+        await ffmpeg.writeFile(
+          `input${i + 1}.mp4`,
+          new Blob([videos[i].buffer], { type: "video/mp4" })
+        );
+      }
+
+      let blobfiles = "";
+      for (let i = 0; i < videos.length; i++) {
+        blobfiles += `file 'input${i + 1}.mp4'\n`;
+      }
+
+      const blobFileList = new Blob([blobfiles], {
+        type: "text/plain",
+      });
+      await ffmpeg.writeFile("filelist.txt", blobFileList);
+
+      //ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
+      await ffmpeg.exec([
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        "filelist.txt",
+        "-c",
+        "copy",
+        "output.mp4",
+      ]);
+
+      let rta = ffmpeg.readFile("output.mp4");
+
+      for (let i = 0; i < videos.length; i++) {
+        ffmpeg.deleteFile(`input${i + 1}.mp4`);
+      }
+
       ffmpeg.deleteFile("output.mp4");
 
       resolve(rta);

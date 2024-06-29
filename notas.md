@@ -20,12 +20,18 @@ await ffmpeg.exec([
 ]);
 ```
 
-Advertecias:
+Advertencias:
 
 - **No cambiar el orden de los parámetros**, porque los interpreta distinto según dónde estén ubicados y probablemente tire error.
 - En algún momento tuve problemas tratando de usar JPGs, no pude.
 - Hay que **usar yuv420p** como formato de pixeles, sino no se ve el video en muchos reproductores incluído instagram, whatsapp, etc.
 - También me daba error cuando el frame tenía un ancho impar en pixeles (decía algo así como que no podía dividir por dos), por lo que hay que asegurarse de que el canvas tenga un tamaño par.
+
+## Reverse video y performance
+
+Inicialmente probe hacer la inversión del video con el parámetro -vf reverse, pero agotaba la memoria.
+Lo que hice para solucionarlo fue ir creando pequeñas partes del video final, que se vaya liberando memoria y luego juntar todo en un video.
+Para hacer el reverse en lugar de hacerlo con la función de ffmpeg refactorice la creación del video en dos partes, la creación de imagenes y el armado del video, la parte de las imagenes es la más lenta, pero una vez que se las tiene en un array se puede pasar el array invertido y crea el video en reverse, y eso es relativamente rápido.
 
 ## Escritura de imagenes y performance
 
@@ -45,7 +51,7 @@ await Promise.all(
 );
 ```
 
-Para usar enums:
+## Para usar enums:
 
 ```javascript
 /**
