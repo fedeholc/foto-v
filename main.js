@@ -559,6 +559,10 @@ function handleDrop(e) {
   }
 }
 
+/**
+ * @param {string[]} videoFrames
+ * @returns {Promise<void>}
+ */
 async function writeImageFiles(videoFrames) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
@@ -573,6 +577,10 @@ async function writeImageFiles(videoFrames) {
   });
 }
 
+/**
+ * @param {number} numberOfFrames
+ * @returns {Promise<void>}
+ */
 async function deleteImageFiles(numberOfFrames) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
@@ -585,6 +593,12 @@ async function deleteImageFiles(numberOfFrames) {
   });
 }
 
+/**
+ * @param {number} frameRate
+ * @param {number} lastFrameRepeat
+ * @param {boolean} reverse
+ * @returns {Promise<{ buffer: BlobPart; }>}
+ */
 async function execCreateVideo(frameRate, lastFrameRepeat, reverse) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
@@ -752,6 +766,10 @@ async function concatVideos(video1, video2) {
   });
 }
 
+/**
+ * @param {{ buffer: BlobPart; }[]} videos
+ * @returns {Promise<{ buffer: BlobPart; }>}
+ */
 async function concatAllVideos(videos) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
@@ -772,7 +790,6 @@ async function concatAllVideos(videos) {
       });
       await ffmpeg.writeFile("filelist.txt", blobFileList);
 
-      //ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
       await ffmpeg.exec([
         "-f",
         "concat",
