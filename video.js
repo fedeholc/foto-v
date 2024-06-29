@@ -52,11 +52,11 @@ export async function concatAllVideos(ffmpeg, videos) {
 }
 
 /**
- * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @param {boolean} reverse
- * @returns {Promise<{ buffer: BlobPart; }>}
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg - ffmpeg instance
+ * @param {number} frameRate - Frame rate of the video
+ * @param {number} lastFrameRepeat - Duration of the last frame (in seconds)
+ * @param {boolean} reverse - Reverse the video or not
+ * @returns {Promise<{ buffer: BlobPart; }>} - Video
  */
 export async function execCreateVideo(
   ffmpeg,

@@ -390,80 +390,6 @@ async function handlePan2end() {
   downloadVideoButton.classList.remove("hidden");
 }
 
-async function handlePan2endNOSPLIT() {
-  //var inicio = Date.now();
-  //console.log("start creación frames  ", Date.now());
-
-  createVideoButton.classList.add("hidden");
-
-  GlobalScreenLogger.log(`Let's go!`);
-  screenLogContainer.classList.add("screen-log");
-  screenLogContainer.classList.remove("hidden");
-
-  // sets the canvas size and the image size acording to the inputs
-  configSizes();
-
-  const inputPixelsShift = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-pixels-shift")
-  );
-  const inputFrameRate = /** @type {HTMLInputElement} */ (
-    document.querySelector("#frame-rate")
-  );
-  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-last-frame")
-  );
-
-  const selectPanDirection = /** @type {HTMLSelectElement} */ (
-    document.querySelector("#pan-direction")
-  );
-
-  let videoFrames = await createFramesPan2end(
-    canvas,
-    img,
-    parseInt(inputPixelsShift.value)
-  );
-
-  //console.log("fin creación frames  ", Date.now() - inicio);
-
-  //var inicio = Date.now();
-  //console.log("inicio de ffmpeg", Date.now());
-
-  let video = await createVideo(
-    videoFrames,
-    parseInt(inputFrameRate.value),
-    parseInt(inputLastFrameRepeat.value)
-  );
-
-  const PanDirection = selectPanDirection.value;
-
-  if (PanDirection === "LR") {
-    videoToDownload = video;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "RL") {
-    let reversedVideo = await reverseVideo(video);
-    videoToDownload = reversedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "LRRL") {
-    let reversedVideo = await reverseVideo(video);
-    let concatenedVideo = await concatVideos(video, reversedVideo);
-    videoToDownload = concatenedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  if (PanDirection === "RLLR") {
-    let reversedVideo = await reverseVideo(video);
-    let concatenedVideo = await concatVideos(reversedVideo, video);
-    videoToDownload = concatenedVideo;
-    downloadVideoButton.classList.remove("hidden");
-  }
-
-  //console.log("fin ffmpeg  ", Date.now() - inicio);
-}
-
 async function handleZoomOut() {
   //var inicio = Date.now();
   //console.log("start creación frames  ", Date.now());
@@ -596,6 +522,7 @@ async function deleteImageFiles(numberOfFrames) {
 }
 
 //TODO: catch del error para el reject?
+//TODO: todavía está en uso por la función de zoom, después quitar y usar la nueva función de video
 /**
  * @param {string[]} videoFrames
  * @param {number} frameRate
@@ -641,81 +568,6 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
       for (let i = 0; i < videoFrames.length; i++) {
         ffmpeg.deleteFile(`input${i + 1}.png`);
       }
-      ffmpeg.deleteFile("output.mp4");
-
-      resolve(rta);
-    });
-  });
-}
-
-/**
- * @param {{ buffer: BlobPart; }} video
- * @returns {Promise<{ buffer: BlobPart; }>}
- */
-async function reverseVideo(video) {
-  console.log("video en reverse: ", video);
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      const blob = new Blob([video.buffer], { type: "video/mp4" });
-      await ffmpeg.writeFile(`inputR.mp4`, blob);
-
-      // no cambiar el orden de estos parametros porque se rompe
-
-      await ffmpeg.exec([
-        "-i",
-        "inputR.mp4", // Plantilla de entrada
-        "-vf",
-        "reverse",
-        /*         "-af",
-        "areverse", */
-        "outputR.mp4",
-      ]);
-
-      let rta = ffmpeg.readFile("outputR.mp4");
-
-      ffmpeg.deleteFile("inputR.mp4");
-      ffmpeg.deleteFile("outputR.mp4");
-      resolve(rta);
-    });
-  });
-}
-
-/**
- * @param {{ buffer: BlobPart; }} video1
- * @param {{ buffer: BlobPart; }} video2
- * @returns {Promise<{ buffer: BlobPart; }>}
- */
-async function concatVideos(video1, video2) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      const blob1 = new Blob([video1.buffer], { type: "video/mp4" });
-      const blob2 = new Blob([video2.buffer], { type: "video/mp4" });
-
-      await ffmpeg.writeFile(`input1.mp4`, blob1);
-      await ffmpeg.writeFile(`input2.mp4`, blob2);
-
-      const blobFileList = new Blob(["file 'input1.mp4'\nfile 'input2.mp4'"], {
-        type: "text/plain",
-      });
-      await ffmpeg.writeFile("filelist.txt", blobFileList);
-
-      //ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
-      await ffmpeg.exec([
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        "filelist.txt",
-        "-c",
-        "copy",
-        "output.mp4",
-      ]);
-
-      let rta = ffmpeg.readFile("output.mp4");
-
-      ffmpeg.deleteFile("input1.mp4");
-      ffmpeg.deleteFile("input2.mp4");
       ffmpeg.deleteFile("output.mp4");
 
       resolve(rta);
