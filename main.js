@@ -325,6 +325,7 @@ async function handlePan2end() {
   const selectPanDirection = /** @type {HTMLSelectElement} */ (
     document.querySelector("#pan-direction")
   );
+  const PanDirection = selectPanDirection.value;
 
   //counter * pixelsShift <= img.width - canvas.width
   //Calcula el total de frames en base a cuantos pixels se tiene que mover la imagen y considerando cuantos pixels se mueve por frame
@@ -336,7 +337,8 @@ async function handlePan2end() {
   console.log("Total frames: ", totalFrames);
 
   let videos = [];
-  let reversedVideos = [];
+  let videosReversed = [];
+  let videosForward = [];
   let chunkSize = 50;
   for (let i = 0; i < totalFrames; i += chunkSize) {
     let videoFrames = await createFramesPanByChunks(
@@ -347,12 +349,57 @@ async function handlePan2end() {
       i + chunkSize
     );
 
-    let video = await createVideo(
+    await writeImageFiles(videoFrames);
+
+    /* let video = await createVideo(
       videoFrames,
       parseInt(inputFrameRate.value),
       parseInt(inputLastFrameRepeat.value)
     );
-    videos.push(video);
+    videos.push(video); */
+
+    if (
+      PanDirection === "LR" ||
+      PanDirection === "LRRL" ||
+      PanDirection === "RLLR"
+    ) {
+      videosForward.push(
+        await execCreateVideo(
+          parseInt(inputFrameRate.value),
+          parseInt(inputLastFrameRepeat.value),
+          false
+        )
+      );
+    }
+
+    if (
+      PanDirection === "RL" ||
+      PanDirection === "LRRL" ||
+      PanDirection === "RLLR"
+    ) {
+      videosReversed.unshift(
+        await execCreateVideo(
+          parseInt(inputFrameRate.value),
+          parseInt(inputLastFrameRepeat.value),
+          true
+        )
+      );
+    }
+
+    if (PanDirection === "LR") {
+      videos = videosForward;
+    }
+    if (PanDirection === "RL") {
+      videos = videosReversed;
+    }
+    if (PanDirection === "LRRL") {
+      videos = videosForward.concat(videosReversed);
+    }
+    if (PanDirection === "RLLR") {
+      videos = videosReversed.concat(videosForward);
+    }
+
+    deleteImageFiles(videoFrames.length);
 
     // VER La de reverseVideo hizo que ubuntu me tire que se quedò sin memoria, lo mismo chrome, pero despué continuó el proceso y funcionó.
     // VER  La de create video con el array de frames invertido funcionó sin problemas. Pero se podría hacer algo mejor que es tomar los frames ya creados dentro de create video y generar ahì tanto el video como su invertido para no tener que repetir el write files que hace createVideo
@@ -368,6 +415,7 @@ async function handlePan2end() {
     console.log(`Completé video ${i} a ${i + chunkSize}`);
   }
 
+  console.log("VIDS: ", videos);
   now = new Date();
   logger.push(`inicio concat videos... ${now}`);
 
@@ -393,8 +441,6 @@ async function handlePan2end() {
   console.log(logger);
 
   //console.log("fin creación frames  ", Date.now() - inicio);
-
-  const PanDirection = selectPanDirection.value;
 
   // TODO volver a poner esto
   // TODO probar liberar memoria con null
@@ -424,6 +470,7 @@ async function handlePan2end() {
     downloadVideoButton.classList.remove("hidden");
   }
  */
+
   GlobalScreenLogger.log(`> Done!`);
 
   videoToDownload = tempVideo;
@@ -601,6 +648,73 @@ function handleDrop(e) {
   }
 }
 
+async function writeImageFiles(videoFrames) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      for (let i = 0; i < videoFrames.length; i++) {
+        GlobalScreenLogger.log(
+          `> Writing frame ${i + 1} of ${videoFrames.length + 1}`
+        );
+        await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
+      }
+      resolve();
+    });
+  });
+}
+
+async function deleteImageFiles(numberOfFrames) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      for (let i = 0; i < numberOfFrames; i++) {
+        ffmpeg.deleteFile(`input${i + 1}.png`);
+      }
+
+      resolve();
+    });
+  });
+}
+
+async function execCreateVideo(frameRate, lastFrameRepeat, reverse) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.whenReady(async () => {
+      let reverseParam = "";
+      if (reverse) {
+        reverseParam = "reverse,";
+      }
+
+      GlobalScreenLogger.log(`> Creating video (it may take a while...)`);
+      // no cambiar el orden de estos parametros porque se rompe
+      await ffmpeg.exec([
+        "-framerate",
+        `${frameRate}`,
+        "-i",
+        "input%d.png", // Plantilla de entrada
+        "-vf",
+        `${reverseParam}tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`, // Filtro para extender el último frame
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "output.mp4",
+      ]);
+      //VER
+      // FIXME agregar reverse al filter "reverse, tpad.."
+      // crea el vid en reversa, ver si es mas o menos rápido que convertir el video ya existente.
+      // ver de separar de la funcion la creación de imagenes para pasarlas como parámetro si vamos a crear el vid y su reverso.
+
+      //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
+
+      GlobalScreenLogger.log(`> Writing video file`);
+
+      let rta = ffmpeg.readFile("output.mp4");
+
+      ffmpeg.deleteFile("output.mp4");
+
+      resolve(rta);
+    });
+  });
+}
+
 //TODO: catch del error para el reject?
 /**
  * @param {string[]} videoFrames
@@ -632,6 +746,10 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
         "yuv420p",
         "output.mp4",
       ]);
+      //VER
+      // FIXME agregar reverse al filter "reverse, tpad.."
+      // crea el vid en reversa, ver si es mas o menos rápido que convertir el video ya existente.
+      // ver de separar de la funcion la creación de imagenes para pasarlas como parámetro si vamos a crear el vid y su reverso.
 
       //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 
