@@ -38,9 +38,9 @@
       </div>
 
     </form>
-    <div class="restart-container" id="restart-container">
+    <section class="restart-container" id="restart-container">
       <button id="restart-button">Restart</button>
-    </div>
+    </section>
     <section class="uploaded-image-container" id="uploaded-image-container">
       <img id="uploaded-image" src="" alt="uploaded image" />
     </section>
@@ -51,7 +51,7 @@
         <div id="effects-container">
           <div id="pan2end-radio-container">
             <input type="radio" id="pan2end-radio" name="effects" value="pan2end">
-            <label id="pan2end-label" for="pan2end-radio">Pan2end</label>
+            <label id="pan2end-label" for="pan2end-radio">Pan</label>
           </div>
           <div id="zoom-radio-container">
             <input type="radio" id="zoom-radio" name="effects" value="zoom">
@@ -63,7 +63,7 @@
 
     <section id="pan2end-section" class="pan2end-section">
       <details>
-        <summary>Pan2end settings</summary>
+        <summary>Pan settings</summary>
         <div class="inputs-grid">
           <div>
             <label>Pixels shift (per frame)</label>
@@ -157,7 +157,7 @@
     </section>
 
 
-    <div id="create-video-container">
+    <section id="create-video-container">
       <div id="screen-log-container">
         <div id="screen-log" class="screen-log"></div>
       </div>
@@ -166,9 +166,8 @@
 
       <!-- <button id="btn-pan2end">Generar Vid: Pan2end</button>
       <button id="btn-zoom-out">Generar Vid: zoomOut</button> -->
-    </div>
-    <div>
-    </div>
+    </section>
+ 
   </main>
   <script type="module" src="main.js" async defer></script>
 </body>

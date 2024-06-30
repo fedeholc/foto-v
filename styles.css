@@ -189,12 +189,14 @@ select:focus {
   outline: 2px solid var(--inputBorder);
 }
 
-
 canvas {
   display: block;
 }
 
-section {
+.uploaded-image-container,
+.pan2end-section,
+.zoomout-section,
+.output-section {
   gap: 1rem;
   display: flex;
   flex-direction: column;
