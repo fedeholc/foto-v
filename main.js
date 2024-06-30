@@ -165,6 +165,8 @@ function handleInputCanvas() {
 
   //imagen centrada
   ctx.drawImage(img, (canvas.width - img.width) / 2, 0, img.width, img.height);
+
+  //configSizes();
 }
 
 function handleCreateVideo() {
@@ -304,6 +306,10 @@ function configSizes() {
   }
   canvas.height = newCanvasHeight;
   canvas.width = newCanvasWidth;
+
+  document.querySelector(
+    "#final-resolution-info"
+  ).textContent = `${canvas.width} x ${canvas.height}`;
 
   //adapta la imagen al canvas considerando encajar la altura
   //por lo que en una imagen vertical que sea 2 x 3, si el canvas es 9x16, la imagen se va a ver con un crop en los costados
