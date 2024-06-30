@@ -39,6 +39,7 @@ inputCanvasWidth.addEventListener("change", handleInputCanvas);
 const inputDivideBy = /** @type {HTMLInputElement} */ (
   document.querySelector("#divide-by")
 );
+inputDivideBy.addEventListener("change", handleInputCanvas);
 
 const canvas = /** @type {HTMLCanvasElement} */ (
   document.getElementById("mi-canvas")
@@ -88,6 +89,8 @@ downloadVideoButton.addEventListener("click", handleDownloadVideo);
 const pan2endSection = document.querySelector("#pan2end-section");
 const zoomOutSection = document.querySelector("#zoomout-section");
 const outputSection = document.querySelector("#output-section");
+
+const finalResolutionInfo = document.querySelector(".final-resolution-info");
 
 // Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -149,24 +152,9 @@ function handleSelectSizePresets() {
   inputCanvasWidth.value = x;
   handleInputCanvas();
 }
+
 function handleInputCanvas() {
-  canvas.height = parseInt(inputCanvasHeight.value);
-  canvas.width = parseInt(inputCanvasWidth.value);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  let oldHeight = img.height;
-  let oldWidth = img.width;
-  img.height = canvas.height;
-  img.width = oldWidth * (canvas.height / oldHeight);
-
-  //TODO: según el efecto podría cambiar el preview... si desde la izquierda o centrado. También se podría hacer un preview del primer frame y otro del último.
-  //FIXME: ojo, si la imagen es vertical y el canvas es horizontal no se está haciendo el crop
-  //imagen desde la izquierda
-  //ctx.drawImage(img, 0, 0, img.width, img.height);
-
-  //imagen centrada
-  ctx.drawImage(img, (canvas.width - img.width) / 2, 0, img.width, img.height);
-
-  //configSizes();
+  updateCanvasSize();
 }
 
 function handleCreateVideo() {
@@ -291,7 +279,7 @@ function loadImage(file) {
   reader.readAsDataURL(file);
 }
 
-function configSizes() {
+function updateCanvasSize() {
   // the canvas height and width must be an even number, if not, it will fail when creating the video
   let divideBy = parseInt(inputDivideBy.value);
   let newCanvasHeight = Math.floor(
@@ -307,9 +295,9 @@ function configSizes() {
   canvas.height = newCanvasHeight;
   canvas.width = newCanvasWidth;
 
-  document.querySelector(
-    "#final-resolution-info"
-  ).textContent = `${canvas.width} x ${canvas.height}`;
+  finalResolutionInfo.textContent = `${canvas.width || 0} x ${
+    canvas.height || 0
+  }`;
 
   //adapta la imagen al canvas considerando encajar la altura
   //por lo que en una imagen vertical que sea 2 x 3, si el canvas es 9x16, la imagen se va a ver con un crop en los costados
@@ -318,6 +306,15 @@ function configSizes() {
   let oldWidth = img.width;
   img.height = canvas.height;
   img.width = oldWidth * (canvas.height / oldHeight);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //TODO: según el efecto podría cambiar el preview... si desde la izquierda o centrado. También se podría hacer un preview del primer frame y otro del último.
+  //FIXME: ojo, si la imagen es vertical y el canvas es horizontal no se está haciendo el crop
+  //imagen desde la izquierda
+  //ctx.drawImage(img, 0, 0, img.width, img.height);
+
+  //imagen centrada
+  ctx.drawImage(img, (canvas.width - img.width) / 2, 0, img.width, img.height);
 }
 
 function handleDownloadVideo() {
@@ -331,7 +328,7 @@ async function handlePan2end() {
   screenLogContainer.classList.remove("hidden");
 
   // sets the canvas size and the image size acording to the inputs
-  configSizes();
+  updateCanvasSize();
 
   const inputPixelsShift = /** @type {HTMLInputElement} */ (
     document.querySelector("#pan2end-pixels-shift")
@@ -425,7 +422,7 @@ async function handleZoomOut() {
   //console.log("start creación frames  ", Date.now());
 
   // sets the canvas size and the image size acording to the inputs
-  configSizes();
+  updateCanvasSize();
 
   const selectZoomFit = /** @type {HTMLSelectElement} */ (
     document.querySelector("#zoomout-fit")

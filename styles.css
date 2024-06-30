@@ -346,6 +346,15 @@ details[open] summary {
 
 }
 
+.final-resolution-container {
+  font-size: 0.9rem;
+}
+
+.final-resolution-info {
+  color: var(--inputFont);
+
+}
+
 
 #form-upload:hover {
   cursor: pointer;
