@@ -1,4 +1,4 @@
-import { GlobalScreenLogger } from "./screenLogger.js";
+import eventBus from "./eventBus.js";
 
 /**
  * @param {number} pixelsShift
@@ -24,9 +24,9 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
 
     function step() {
       //console.log("step", counter, (img.width - canvas.width) / pixelsShift);
-      GlobalScreenLogger.log(
-        `> Step 1 of 4 <br>
-        > Creating frame ${counter} of ${
+      eventBus.publish(
+        "log",
+        `Creating frame ${counter} of ${
           Math.round(img.width - canvas.width) / pixelsShift
         }`
       );
@@ -44,7 +44,7 @@ export function createFramesPan2end(canvas, img, pixelsShift) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas 
+ * @param {HTMLCanvasElement} canvas
  * @param {HTMLImageElement} img
  * @param {number} pixelsShift
  * @param {number} posX
@@ -67,7 +67,7 @@ export function createFramesPanByChunks(canvas, img, pixelsShift, posX, toX) {
     requestAnimationFrame(step);
 
     function step() {
-      GlobalScreenLogger.log(`> Creating frame ${posX} of ${toX}`);
+      eventBus.publish("log", `Creating frame ${posX} of ${toX}`);
 
       ctx.drawImage(img, 0 - posX * pixelsShift, 0, img.width, img.height);
       videoFrames.push(canvas.toDataURL("image/png"));

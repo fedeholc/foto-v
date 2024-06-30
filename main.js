@@ -14,6 +14,7 @@ import {
   createFramesZoomOut,
 } from "./createFrames.js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
+import eventBus from "./eventBus.js";
 
 //
 //* DOM elements and event listeners
@@ -91,9 +92,7 @@ const outputSection = document.querySelector("#output-section");
 // Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobalScreenLogger.init(screenLogDiv);
-GlobalScreenLogger.log(
-  "Hola, mundo! <br> Hola, mundo! Hola, mundo! Hola, mundo!"
-);
+eventBus.publish("log", "* * *");
 
 const ctx = canvas.getContext("2d");
 const ffmpeg = new FFmpeg({
@@ -104,11 +103,20 @@ const img = new Image();
 /** @typedef {{buffer: BlobPart}} */
 let videoToDownload;
 
+eventBus.subscribe("log", miLog);
+
 initUI();
 
 // # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+function miLog(text) {
+  let now = new Date();
+  GlobalScreenLogger.log(now.toISOString() + " " + text);
+  console.log(now.toISOString() + " " + text);
+}
+
 function initUI() {
+  eventBus.publish("log", "initUI");
   uploadedImageContainer.classList.add("hidden");
   uploadedImageContainer.classList.remove("uploaded-image-container");
   restartContainer.classList.remove("restart-container");
@@ -308,7 +316,7 @@ function handleDownloadVideo() {
 
 async function handlePan2end() {
   createVideoButton.classList.add("hidden");
-  GlobalScreenLogger.log(`Let's go!`);
+
   screenLogContainer.classList.add("screen-log");
   screenLogContainer.classList.remove("hidden");
 
@@ -397,7 +405,7 @@ async function handlePan2end() {
 
   videoToDownload = await concatAllVideos(ffmpeg, videos);
 
-  GlobalScreenLogger.log(`> Done!`);
+  eventBus.publish("log", `Done!`);
 
   downloadVideoButton.classList.remove("hidden");
 }
@@ -507,8 +515,9 @@ async function writeImageFiles(videoFrames) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       for (let i = 0; i < videoFrames.length; i++) {
-        GlobalScreenLogger.log(
-          `> Writing frame ${i + 1} of ${videoFrames.length + 1}`
+        eventBus.publish(
+          "log",
+          `Writing frame ${i + 1} of ${videoFrames.length + 1}`
         );
         await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
       }
@@ -545,13 +554,14 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       for (let i = 0; i < videoFrames.length; i++) {
-        GlobalScreenLogger.log(
-          `> Writing frame ${i + 1} of ${videoFrames.length + 1}`
+        eventBus.publish(
+          "log",
+          `Writing frame ${i + 1} of ${videoFrames.length + 1}`
         );
         await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
       }
 
-      GlobalScreenLogger.log(`> Creating video (it may take a while...)`);
+      eventBus.publish("log", `Creating video (it may take a while...)`);
       // no cambiar el orden de estos parametros porque se rompe
       await ffmpeg.exec([
         "-framerate",
@@ -573,7 +583,7 @@ async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
 
       //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 
-      GlobalScreenLogger.log(`> Writing video file`);
+      eventBus.publish("log", `Writing video file`);
 
       let rta = ffmpeg.readFile("output.mp4");
 

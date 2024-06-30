@@ -1,5 +1,5 @@
-import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
+import eventBus from "./eventBus";
 
 /**
  * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg - ffmpeg instance
@@ -71,7 +71,7 @@ export async function execCreateVideo(
         reverseParam = "reverse,";
       }
 
-      GlobalScreenLogger.log(`> Creating video (it may take a while...)`);
+      eventBus.publish("log", `Creating video (it may take a while...)`);
       // no cambiar el orden de estos parametros porque se rompe
       await ffmpeg.exec([
         "-framerate",
@@ -89,7 +89,7 @@ export async function execCreateVideo(
 
       //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 
-      GlobalScreenLogger.log(`> Writing video file`);
+      eventBus.publish("log", `Writing video file`);
 
       let rta = ffmpeg.readFile("output.mp4");
 
