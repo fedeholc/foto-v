@@ -216,6 +216,7 @@ function handleRestartButton() {
   uploadedImage.setAttribute("src", "");
   uploadedImageContainer.classList.add("hidden");
   uploadedImageContainer.classList.remove("uploaded-image-container");
+  createVideoButton.classList.remove("hidden");
   initUI();
 }
 

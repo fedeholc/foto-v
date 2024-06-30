@@ -67,7 +67,7 @@
         <div class="inputs-grid">
           <div>
             <label>Pixels shift (per frame)</label>
-            <input type="number" id="pan2end-pixels-shift" name="pan2end-pixels-shift" placeholder=2 value=2 />
+            <input type="number" id="pan2end-pixels-shift" name="pan2end-pixels-shift" placeholder=2 value=2 min="1" />
           </div>
           <div>
             <label>Last frame repeat (in seconds)</label>
@@ -93,11 +93,12 @@
         <div class="inputs-grid">
           <div>
             <label>Pixels shift (per frame)</label>
-            <input type="number" id="zoomout-pixels-shift" name="zoomout-pixels-shift" placeholder=2 value=2 />
+            <input type="number" id="zoomout-pixels-shift" name="zoomout-pixels-shift" placeholder=2 value=2 min="1" />
           </div>
           <div>
             <label>Total frames</label>
-            <input type="number" id="zoomout-total-frames" name="zoomout-total-frames" placeholder=60 value=60 />
+            <input type="number" id="zoomout-total-frames" name="zoomout-total-frames" placeholder=60 value=60
+              min="1" />
           </div>
           <div>
             <label>Last frame repeat (in seconds)</label>
@@ -132,19 +133,19 @@
             </div>
             <div>
               <label>Height</label>
-              <input type="number" id="canvas-height" name="canvas-height" placeholder=1920 value=1920 />
+              <input type="number" id="canvas-height" name="canvas-height" placeholder=1920 value=1920 min="1" />
             </div>
             <div>
               <label>Width</label>
-              <input type="number" id="canvas-width" name="canvas-width" placeholder=1080 value=1080 />
+              <input type="number" id="canvas-width" name="canvas-width" placeholder=1080 value=1080 min="1" />
             </div>
             <div>
               <label>Downscale, divide by </label>
-              <input type="number" id="divide-by" name="divide-by" placeholder=2 value=2 />
+              <input type="number" id="divide-by" name="divide-by" placeholder=2 value=2 min="1" />
             </div>
             <div>
               <label>Frame rate</label>
-              <input type="number" id="frame-rate" name="frame-rate" placeholder=30 value=30 />
+              <input type="number" id="frame-rate" name="frame-rate" placeholder=30 value=30 min="1" />
             </div>
             <div class="divider"></div>
           </div>
