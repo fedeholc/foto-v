@@ -277,9 +277,20 @@ function loadImage(file) {
 }
 
 function configSizes() {
+  // the canvas height and width must be an even number, if not, it will fail when creating the video
   let divideBy = parseInt(inputDivideBy.value);
-  canvas.height = parseInt(inputCanvasHeight.value) / divideBy;
-  canvas.width = parseInt(inputCanvasWidth.value) / divideBy;
+  let newCanvasHeight = Math.floor(
+    parseInt(inputCanvasHeight.value) / divideBy
+  );
+  if (newCanvasHeight % 2 !== 0) {
+    newCanvasHeight++;
+  }
+  let newCanvasWidth = Math.floor(parseInt(inputCanvasWidth.value) / divideBy);
+  if (newCanvasWidth % 2 !== 0) {
+    newCanvasWidth++;
+  }
+  canvas.height = newCanvasHeight;
+  canvas.width = newCanvasWidth;
 
   //adapta la imagen al canvas considerando encajar la altura
   //por lo que en una imagen vertical que sea 2 x 3, si el canvas es 9x16, la imagen se va a ver con un crop en los costados
