@@ -247,7 +247,7 @@ function setUploadedUI() {
   effecstDetails.setAttribute("open", "");
 }
 /**
- * @param {Blob} file
+ * @param {File} file
  */
 function loadImage(file) {
   const reader = new FileReader();
@@ -277,6 +277,10 @@ function loadImage(file) {
     if (typeof event.target.result === "string") {
       img.src = event.target.result;
       uploadedImage.setAttribute("src", event.target.result);
+      uploadedImageContainer.querySelector("#uploaded-image-info").innerHTML = `
+      <strong>${file.name}</strong><BR>
+      ${Math.round(file.size / 1000)}kb | ${img.width} x ${img.height} 
+      `;
     } else {
       console.error("No se pudo cargar la imagen");
       //TODO: ver cómo hice la carga de archivo y manejo de errores en fotoyop
