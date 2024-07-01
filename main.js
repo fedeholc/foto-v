@@ -12,6 +12,7 @@ import {
   createFramesPan2end,
   createFramesPanByChunks,
   createFramesZoomOut,
+  createFramesZoomOutByChunks,
 } from "./createFrames.js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
 import eventBus from "./eventBus.js";
@@ -418,8 +419,10 @@ async function handlePan2end() {
 }
 
 async function handleZoomOut() {
-  //var inicio = Date.now();
-  //console.log("start creación frames  ", Date.now());
+  createVideoButton.classList.add("hidden");
+
+  screenLogContainer.classList.add("screen-log");
+  screenLogContainer.classList.remove("hidden");
 
   // sets the canvas size and the image size acording to the inputs
   updateCanvasSize();
@@ -447,24 +450,55 @@ async function handleZoomOut() {
     document.querySelector("#zoomout-last-frame")
   );
 
-  let videoFrames = await createFramesZoomOut(
-    canvas,
-    img,
-    parseInt(inputTotalFrames.value),
-    parseInt(inputPixelsShift.value),
-    zoomFit
-  );
-  //console.log("fin creación frames  ", Date.now() - inicio);
+  let totalFrames = parseInt(inputTotalFrames.value);
+  let videos = [];
+  let videosReversed = [];
+  let videosForward = [];
+  let chunkSize = 50;
+  for (let i = 0; i < totalFrames; i += chunkSize) {
+    let videoFrames = await createFramesZoomOutByChunks(
+      canvas,
+      img,
+      parseInt(inputTotalFrames.value),
+      parseInt(inputPixelsShift.value),
+      zoomFit,
+      i,
+      i + chunkSize
+    );
 
-  //var inicio = Date.now();
-  //console.log("inicio de ffmpeg", Date.now());
-  let video = await createVideo(
-    videoFrames,
-    parseInt(inputFrameRate.value),
-    parseInt(inputLastFrameRepeat.value)
-  );
-  //console.log("fin ffmpeg  ", Date.now() - inicio);
-  downloadVideo(video);
+    await writeImageFiles(videoFrames);
+
+    videosForward.push(
+      await execCreateVideo(
+        ffmpeg,
+        parseInt(inputFrameRate.value),
+        parseInt(inputLastFrameRepeat.value),
+        false
+      )
+    );
+
+    //VER ok para implementar el ida y vuelta
+    /*  videosReversed.unshift(
+      await execCreateVideo(
+        ffmpeg,
+        parseInt(inputFrameRate.value),
+        parseInt(inputLastFrameRepeat.value),
+        true
+      )
+    );
+
+    videos = videosForward.concat(videosReversed); */
+
+    videos = videosForward;
+
+    deleteImageFiles(videoFrames.length);
+  }
+
+  videoToDownload = await concatAllVideos(ffmpeg, videos);
+
+  eventBus.publish("log", `Done!`);
+
+  downloadVideoButton.classList.remove("hidden");
 }
 
 /**

@@ -153,3 +153,85 @@ export function createFramesZoomOut(
     }
   });
 }
+
+/**
+ * @param {number} totalFrames
+ * @param {number} pixelsShift
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {("fitWidth" | "fitHeight")} fit adjust image to width or height
+ * @param {number} startPosition
+ * @param {number} endPosition
+ * @returns {Promise<string[]>}
+ */
+export function createFramesZoomOutByChunks(
+  canvas,
+  img,
+  totalFrames,
+  pixelsShift,
+  fit,
+  startPosition,
+  endPosition
+) {
+  return new Promise((resolve, reject) => {
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      return reject(new Error("Error obtaining 2d context from canvas"));
+    }
+    if (!img.complete) {
+      return reject(new Error("Image not loaded"));
+    }
+
+    let videoFrames = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    requestAnimationFrame(step);
+
+    function step() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let height,
+        width,
+        newHeight,
+        newWidth = 0;
+
+      //adaptar para que encaje de altura
+      if (fit === "fitHeight") {
+        height =
+          canvas.height +
+          totalFrames * pixelsShift -
+          startPosition * pixelsShift;
+        newWidth = Math.round((canvas.height / img.height) * img.width);
+        width =
+          newWidth + totalFrames * pixelsShift - startPosition * pixelsShift;
+      }
+
+      //adaptar para que encaje de ancho
+      if (fit === "fitWidth") {
+        width =
+          canvas.width +
+          totalFrames * pixelsShift -
+          startPosition * pixelsShift;
+        newHeight = Math.round((canvas.width / img.width) * img.height);
+        height =
+          newHeight + totalFrames * pixelsShift - startPosition * pixelsShift;
+      }
+
+      //VER el redondear hacía que se viera mal cuando el scaleFactor era de 1 pixel. Habría que ver si dejarlo así o probar redondear tanto x e y como el width y height para que siempre tenga enteros divisibles por 2.
+      //const x = Math.round(canvas.width / 2 - width / 2);
+      //const y = Math.round(canvas.height / 2 - height / 2);
+
+      const x = canvas.width / 2 - width / 2;
+      const y = canvas.height / 2 - height / 2;
+
+      ctx.drawImage(img, x, y, width, height);
+      videoFrames.push(canvas.toDataURL("image/png"));
+      startPosition++;
+      if (startPosition <= endPosition && startPosition <= totalFrames) {
+        requestAnimationFrame(step);
+      } else {
+        resolve(videoFrames);
+      }
+    }
+  });
+}
