@@ -1,7 +1,30 @@
 import eventBus from "./eventBus.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
-
 import { execCreateVideo, concatAllVideos } from "./video.js";
+
+export function getPanValues() {
+  //VER dçonde poner esto? acà? afuera de la funciòn? modulo de dom elements? al inicio? agrupar todos los dom elements en un solo lugar o priorizar locality of behavior y poner aca?
+
+  const inputPixelsShift = /** @type {HTMLInputElement} */ (
+    document.querySelector("#pan2end-pixels-shift")
+  );
+  const inputFrameRate = /** @type {HTMLInputElement} */ (
+    document.querySelector("#frame-rate")
+  );
+  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
+    document.querySelector("#pan2end-last-frame")
+  );
+  const selectPanDirection = /** @type {HTMLSelectElement} */ (
+    document.querySelector("#pan-direction")
+  );
+
+  return {
+    pixelsShift: parseInt(inputPixelsShift.value),
+    frameRate: parseInt(inputFrameRate.value),
+    lastFrameRepeat: parseInt(inputLastFrameRepeat.value),
+    direction: selectPanDirection.value,
+  };
+}
 
 /**
  * @param {string[]} videoFrames

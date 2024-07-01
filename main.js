@@ -9,9 +9,9 @@
 import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
-  createFramesPanByChunks,
   createFramesZoomOutByChunks,
-  createPanVideo
+  createPanVideo,
+  getPanValues,
 } from "./effects.js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
 import eventBus from "./eventBus.js";
@@ -170,27 +170,20 @@ async function handleCreateVideo() {
   updateCanvasSize();
 
   if (pan2endRadio.checked) {
-    //VER dçonde poner esto? modulo de dom elements? al inicio?
-    const inputPixelsShift = /** @type {HTMLInputElement} */ (
-      document.querySelector("#pan2end-pixels-shift")
-    );
-    const inputFrameRate = /** @type {HTMLInputElement} */ (
-      document.querySelector("#frame-rate")
-    );
-    const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-      document.querySelector("#pan2end-last-frame")
-    );
-    const selectPanDirection = /** @type {HTMLSelectElement} */ (
-      document.querySelector("#pan-direction")
-    );
+    
+
+  
+
+    let panOptions = getPanValues();
+
     videoToDownload = await createPanVideo(
       ffmpeg,
       canvas,
       img,
-      parseInt(inputPixelsShift.value),
-      parseInt(inputFrameRate.value),
-      parseInt(inputLastFrameRepeat.value),
-      selectPanDirection.value
+      panOptions.pixelsShift,
+      panOptions.frameRate,
+      panOptions.lastFrameRepeat,
+      panOptions.direction
     );
   } else if (zoomOutRadio.checked) {
     //TODO: hacer lo mismo que con createPanVideo
