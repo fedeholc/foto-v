@@ -171,6 +171,7 @@ async function handleCreateVideo() {
   updateCanvasSize();
 
   if (pan2endRadio.checked) {
+    //VER dçonde poner esto? modulo de dom elements? al inicio?
     const inputPixelsShift = /** @type {HTMLInputElement} */ (
       document.querySelector("#pan2end-pixels-shift")
     );
@@ -191,6 +192,7 @@ async function handleCreateVideo() {
       selectPanDirection.value
     );
   } else if (zoomOutRadio.checked) {
+    //TODO: hacer lo mismo que con createPanVideo
     videoToDownload = await createZoomOutVideo();
   }
 
