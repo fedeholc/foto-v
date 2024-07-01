@@ -583,61 +583,6 @@ async function deleteImageFiles(numberOfFrames) {
   });
 }
 
-//TODO: catch del error para el reject?
-//TODO: todavía está en uso por la función de zoom, después quitar y usar la nueva función de video
-/**
- * @param {string[]} videoFrames
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @returns {Promise<{ buffer: BlobPart; }>}
- */
-async function createVideo(videoFrames, frameRate, lastFrameRepeat) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      for (let i = 0; i < videoFrames.length; i++) {
-        eventBus.publish(
-          "log",
-          `Writing frame ${i + 1} of ${videoFrames.length + 1}`
-        );
-        await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
-      }
-
-      eventBus.publish("log", `Creating video (it may take a while...)`);
-      // no cambiar el orden de estos parametros porque se rompe
-      await ffmpeg.exec([
-        "-framerate",
-        `${frameRate}`,
-        "-i",
-        "input%d.png", // Plantilla de entrada
-        "-vf",
-        `tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`, // Filtro para extender el último frame
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "output.mp4",
-      ]);
-      //VER
-      // FIXME agregar reverse al filter "reverse, tpad.."
-      // crea el vid en reversa, ver si es mas o menos rápido que convertir el video ya existente.
-      // ver de separar de la funcion la creación de imagenes para pasarlas como parámetro si vamos a crear el vid y su reverso.
-
-      //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
-
-      eventBus.publish("log", `Writing video file`);
-
-      let rta = ffmpeg.readFile("output.mp4");
-
-      for (let i = 0; i < videoFrames.length; i++) {
-        ffmpeg.deleteFile(`input${i + 1}.png`);
-      }
-      ffmpeg.deleteFile("output.mp4");
-
-      resolve(rta);
-    });
-  });
-}
-
 /**
  * @param {{ buffer: BlobPart; }} video
  */
