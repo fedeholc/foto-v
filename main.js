@@ -158,14 +158,45 @@ function handleInputCanvas() {
   updateCanvasSize();
 }
 
-function handleCreateVideo() {
+async function handleCreateVideo() {
   if (img.src === "") {
     return;
   }
+
+  createVideoButton.classList.add("hidden");
+  screenLogContainer.classList.add("screen-log");
+  screenLogContainer.classList.remove("hidden");
+
+  // sets the canvas size and the image size acording to the inputs
+  updateCanvasSize();
+
   if (pan2endRadio.checked) {
-    handlePan2end();
+    const inputPixelsShift = /** @type {HTMLInputElement} */ (
+      document.querySelector("#pan2end-pixels-shift")
+    );
+    const inputFrameRate = /** @type {HTMLInputElement} */ (
+      document.querySelector("#frame-rate")
+    );
+    const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
+      document.querySelector("#pan2end-last-frame")
+    );
+    const selectPanDirection = /** @type {HTMLSelectElement} */ (
+      document.querySelector("#pan-direction")
+    );
+    videoToDownload = await createPanVideo(
+      ffmpeg,
+      parseInt(inputPixelsShift.value),
+      parseInt(inputFrameRate.value),
+      parseInt(inputLastFrameRepeat.value),
+      selectPanDirection.value
+    );
   } else if (zoomOutRadio.checked) {
-    handleZoomOut();
+    videoToDownload = await createZoomOutVideo();
+  }
+
+  if (videoToDownload) {
+    eventBus.publish("log", `Done!`);
+    downloadVideoButton.classList.remove("hidden");
   }
 }
 
@@ -322,34 +353,24 @@ function handleDownloadVideo() {
   downloadVideo(videoToDownload);
 }
 
-async function handlePan2end() {
-  createVideoButton.classList.add("hidden");
-
-  screenLogContainer.classList.add("screen-log");
-  screenLogContainer.classList.remove("hidden");
-
-  // sets the canvas size and the image size acording to the inputs
-  updateCanvasSize();
-
-  const inputPixelsShift = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-pixels-shift")
-  );
-  const inputFrameRate = /** @type {HTMLInputElement} */ (
-    document.querySelector("#frame-rate")
-  );
-  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-last-frame")
-  );
-  const selectPanDirection = /** @type {HTMLSelectElement} */ (
-    document.querySelector("#pan-direction")
-  );
-  const PanDirection = selectPanDirection.value;
-
+/**
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
+ * @param {number} pixelsShift
+ * @param {number} frameRate
+ * @param {number} lastFrameRepeat
+ * @param {string} direction
+ * @returns {Promise<{buffer: BlobPart}>}
+ */
+async function createPanVideo(
+  ffmpeg,
+  pixelsShift,
+  frameRate,
+  lastFrameRepeat,
+  direction
+) {
   //Calcula el total de frames en base a cuantos pixels se tiene que mover la imagen y considerando cuantos pixels se mueve por frame
   //Suma uno porque son los movimientos más la posición inicial que también se tiene que mostrar.
-  let totalFrames =
-    Math.floor((img.width - canvas.width) / parseInt(inputPixelsShift.value)) +
-    1;
+  let totalFrames = Math.floor((img.width - canvas.width) / pixelsShift + 1);
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
@@ -358,75 +379,44 @@ async function handlePan2end() {
     let videoFrames = await createFramesPanByChunks(
       canvas,
       img,
-      parseInt(inputPixelsShift.value),
+      pixelsShift,
       i,
       i + chunkSize
     );
 
     await writeImageFiles(videoFrames);
 
-    if (
-      PanDirection === "LR" ||
-      PanDirection === "LRRL" ||
-      PanDirection === "RLLR"
-    ) {
+    if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
       videosForward.push(
-        await execCreateVideo(
-          ffmpeg,
-          parseInt(inputFrameRate.value),
-          parseInt(inputLastFrameRepeat.value),
-          false
-        )
+        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
       );
     }
 
-    if (
-      PanDirection === "RL" ||
-      PanDirection === "LRRL" ||
-      PanDirection === "RLLR"
-    ) {
+    if (direction === "RL" || direction === "LRRL" || direction === "RLLR") {
       videosReversed.unshift(
-        await execCreateVideo(
-          ffmpeg,
-          parseInt(inputFrameRate.value),
-          parseInt(inputLastFrameRepeat.value),
-          true
-        )
+        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
       );
     }
 
-    if (PanDirection === "LR") {
+    if (direction === "LR") {
       videos = videosForward;
     }
-    if (PanDirection === "RL") {
+    if (direction === "RL") {
       videos = videosReversed;
     }
-    if (PanDirection === "LRRL") {
+    if (direction === "LRRL") {
       videos = videosForward.concat(videosReversed);
     }
-    if (PanDirection === "RLLR") {
+    if (direction === "RLLR") {
       videos = videosReversed.concat(videosForward);
     }
-
     deleteImageFiles(videoFrames.length);
   }
-
-  videoToDownload = await concatAllVideos(ffmpeg, videos);
-
-  eventBus.publish("log", `Done!`);
-
-  downloadVideoButton.classList.remove("hidden");
+  let resultVideo = await concatAllVideos(ffmpeg, videos);
+  return resultVideo;
 }
 
-async function handleZoomOut() {
-  createVideoButton.classList.add("hidden");
-
-  screenLogContainer.classList.add("screen-log");
-  screenLogContainer.classList.remove("hidden");
-
-  // sets the canvas size and the image size acording to the inputs
-  updateCanvasSize();
-
+async function createZoomOutVideo() {
   const selectZoomFit = /** @type {HTMLSelectElement} */ (
     document.querySelector("#zoomout-fit")
   );
@@ -494,11 +484,8 @@ async function handleZoomOut() {
     deleteImageFiles(videoFrames.length);
   }
 
-  videoToDownload = await concatAllVideos(ffmpeg, videos);
-
-  eventBus.publish("log", `Done!`);
-
-  downloadVideoButton.classList.remove("hidden");
+  let resultVideo = await concatAllVideos(ffmpeg, videos);
+  return resultVideo;
 }
 
 /**
