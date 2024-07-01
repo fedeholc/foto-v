@@ -9,11 +9,10 @@
 import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
-  createFramesPan2end,
   createFramesPanByChunks,
-  createFramesZoomOut,
   createFramesZoomOutByChunks,
-} from "./createFrames.js";
+  createPanVideo
+} from "./effects.js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
 import eventBus from "./eventBus.js";
 
@@ -186,6 +185,8 @@ async function handleCreateVideo() {
     );
     videoToDownload = await createPanVideo(
       ffmpeg,
+      canvas,
+      img,
       parseInt(inputPixelsShift.value),
       parseInt(inputFrameRate.value),
       parseInt(inputLastFrameRepeat.value),
@@ -353,69 +354,6 @@ function updateCanvasSize() {
 
 function handleDownloadVideo() {
   downloadVideo(videoToDownload);
-}
-
-/**
- * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
- * @param {number} pixelsShift
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @param {string} direction
- * @returns {Promise<{buffer: BlobPart}>}
- */
-async function createPanVideo(
-  ffmpeg,
-  pixelsShift,
-  frameRate,
-  lastFrameRepeat,
-  direction
-) {
-  //Calcula el total de frames en base a cuantos pixels se tiene que mover la imagen y considerando cuantos pixels se mueve por frame
-  //Suma uno porque son los movimientos más la posición inicial que también se tiene que mostrar.
-  let totalFrames = Math.floor((img.width - canvas.width) / pixelsShift + 1);
-  let videos = [];
-  let videosReversed = [];
-  let videosForward = [];
-  let chunkSize = 50;
-  for (let i = 0; i < totalFrames; i += chunkSize) {
-    let videoFrames = await createFramesPanByChunks(
-      canvas,
-      img,
-      pixelsShift,
-      i,
-      i + chunkSize
-    );
-
-    await writeImageFiles(videoFrames);
-
-    if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
-      videosForward.push(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-      );
-    }
-
-    if (direction === "RL" || direction === "LRRL" || direction === "RLLR") {
-      videosReversed.unshift(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
-      );
-    }
-
-    if (direction === "LR") {
-      videos = videosForward;
-    }
-    if (direction === "RL") {
-      videos = videosReversed;
-    }
-    if (direction === "LRRL") {
-      videos = videosForward.concat(videosReversed);
-    }
-    if (direction === "RLLR") {
-      videos = videosReversed.concat(videosForward);
-    }
-    deleteImageFiles(videoFrames.length);
-  }
-  let resultVideo = await concatAllVideos(ffmpeg, videos);
-  return resultVideo;
 }
 
 async function createZoomOutVideo() {
