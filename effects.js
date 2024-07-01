@@ -2,6 +2,102 @@ import eventBus from "./eventBus.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
 
+/**
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {"fitHeight" | "fitWidth"} zoomFit
+ * @param {number} totalFrames
+ * @param {number} pixelsShift
+ * @param {number} frameRate
+ * @param {number} lastFrameRepeat
+ * @returns {Promise<{buffer: BlobPart;}>}
+ */
+export async function createZoomOutVideo(
+  ffmpeg,
+  canvas,
+  img,
+  zoomFit,
+  totalFrames,
+  pixelsShift,
+  frameRate,
+  lastFrameRepeat
+) {
+  let videos = [];
+  let videosReversed = [];
+  let videosForward = [];
+  let chunkSize = 50;
+  for (let i = 0; i < totalFrames; i += chunkSize) {
+    let videoFrames = await createFramesZoomOutByChunks(
+      canvas,
+      img,
+      totalFrames,
+      pixelsShift,
+      zoomFit,
+      i,
+      i + chunkSize
+    );
+
+    await writeImageFiles(ffmpeg, videoFrames);
+
+    videosForward.push(
+      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+    );
+
+    //VER ok para implementar el ida y vuelta
+    /*  videosReversed.unshift(
+      await execCreateVideo(
+        ffmpeg,
+        (frameRate),
+        (lastFrameRepeat),
+        true
+      )
+    );
+
+    videos = videosForward.concat(videosReversed); */
+
+    videos = videosForward;
+
+    deleteImageFiles(ffmpeg, videoFrames.length);
+  }
+
+  let resultVideo = await concatAllVideos(ffmpeg, videos);
+  return resultVideo;
+}
+
+export function getZoomValues() {
+  const selectZoomFit = /** @type {HTMLSelectElement} */ (
+    document.querySelector("#zoomout-fit")
+  );
+
+  /** @type {"fitHeight" | "fitWidth"} */
+  let zoomFit = "fitHeight";
+  if (selectZoomFit.value === "fitWidth") {
+    zoomFit = "fitWidth";
+  }
+
+  const inputTotalFrames = /** @type {HTMLInputElement} */ (
+    document.querySelector("#zoomout-total-frames")
+  );
+  const inputPixelsShift = /** @type {HTMLInputElement} */ (
+    document.querySelector("#zoomout-pixels-shift")
+  );
+  const inputFrameRate = /** @type {HTMLInputElement} */ (
+    document.querySelector("#frame-rate")
+  );
+  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
+    document.querySelector("#zoomout-last-frame")
+  );
+
+  return {
+    zoomFit,
+    totalFrames: parseInt(inputTotalFrames.value),
+    pixelsShift: parseInt(inputPixelsShift.value),
+    frameRate: parseInt(inputFrameRate.value),
+    lastFrameRepeat: parseInt(inputLastFrameRepeat.value),
+  };
+}
+
 export function getPanValues() {
   //VER dçonde poner esto? acà? afuera de la funciòn? modulo de dom elements? al inicio? agrupar todos los dom elements en un solo lugar o priorizar locality of behavior y poner aca?
 

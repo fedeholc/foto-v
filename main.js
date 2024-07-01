@@ -9,11 +9,11 @@
 import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
-  createFramesZoomOutByChunks,
   createPanVideo,
+  createZoomOutVideo,
   getPanValues,
+  getZoomValues,
 } from "./effects.js";
-import { execCreateVideo, concatAllVideos } from "./video.js";
 import eventBus from "./eventBus.js";
 
 //
@@ -170,12 +170,7 @@ async function handleCreateVideo() {
   updateCanvasSize();
 
   if (pan2endRadio.checked) {
-    
-
-  
-
     let panOptions = getPanValues();
-
     videoToDownload = await createPanVideo(
       ffmpeg,
       canvas,
@@ -186,8 +181,17 @@ async function handleCreateVideo() {
       panOptions.direction
     );
   } else if (zoomOutRadio.checked) {
-    //TODO: hacer lo mismo que con createPanVideo
-    videoToDownload = await createZoomOutVideo();
+    let zoomOutOptions = getZoomValues();
+    videoToDownload = await createZoomOutVideo(
+      ffmpeg,
+      canvas,
+      img,
+      zoomOutOptions.zoomFit,
+      zoomOutOptions.totalFrames,
+      zoomOutOptions.pixelsShift,
+      zoomOutOptions.frameRate,
+      zoomOutOptions.lastFrameRepeat
+    );
   }
 
   if (videoToDownload) {
@@ -349,78 +353,6 @@ function handleDownloadVideo() {
   downloadVideo(videoToDownload);
 }
 
-async function createZoomOutVideo() {
-  const selectZoomFit = /** @type {HTMLSelectElement} */ (
-    document.querySelector("#zoomout-fit")
-  );
-
-  /** @type {"fitHeight" | "fitWidth"} */
-  let zoomFit = "fitHeight";
-  if (selectZoomFit.value === "fitWidth") {
-    zoomFit = "fitWidth";
-  }
-
-  const inputTotalFrames = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-total-frames")
-  );
-  const inputPixelsShift = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-pixels-shift")
-  );
-  const inputFrameRate = /** @type {HTMLInputElement} */ (
-    document.querySelector("#frame-rate")
-  );
-  const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-last-frame")
-  );
-
-  let totalFrames = parseInt(inputTotalFrames.value);
-  let videos = [];
-  let videosReversed = [];
-  let videosForward = [];
-  let chunkSize = 50;
-  for (let i = 0; i < totalFrames; i += chunkSize) {
-    let videoFrames = await createFramesZoomOutByChunks(
-      canvas,
-      img,
-      parseInt(inputTotalFrames.value),
-      parseInt(inputPixelsShift.value),
-      zoomFit,
-      i,
-      i + chunkSize
-    );
-
-    await writeImageFiles(videoFrames);
-
-    videosForward.push(
-      await execCreateVideo(
-        ffmpeg,
-        parseInt(inputFrameRate.value),
-        parseInt(inputLastFrameRepeat.value),
-        false
-      )
-    );
-
-    //VER ok para implementar el ida y vuelta
-    /*  videosReversed.unshift(
-      await execCreateVideo(
-        ffmpeg,
-        parseInt(inputFrameRate.value),
-        parseInt(inputLastFrameRepeat.value),
-        true
-      )
-    );
-
-    videos = videosForward.concat(videosReversed); */
-
-    videos = videosForward;
-
-    deleteImageFiles(videoFrames.length);
-  }
-
-  let resultVideo = await concatAllVideos(ffmpeg, videos);
-  return resultVideo;
-}
-
 /**
  * @param {Event} e
  */
@@ -466,41 +398,6 @@ function handleDrop(e) {
     loadImage(files[0]);
     setUploadedUI();
   }
-}
-
-/**
- * @param {string[]} videoFrames
- * @returns {Promise<void>}
- */
-async function writeImageFiles(videoFrames) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      for (let i = 0; i < videoFrames.length; i++) {
-        eventBus.publish(
-          "log",
-          `Writing frame ${i + 1} of ${videoFrames.length + 1}`
-        );
-        await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
-      }
-      resolve();
-    });
-  });
-}
-
-/**
- * @param {number} numberOfFrames
- * @returns {Promise<void>}
- */
-async function deleteImageFiles(numberOfFrames) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.whenReady(async () => {
-      for (let i = 0; i < numberOfFrames; i++) {
-        ffmpeg.deleteFile(`input${i + 1}.png`);
-      }
-
-      resolve();
-    });
-  });
 }
 
 /**
