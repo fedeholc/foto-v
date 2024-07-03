@@ -108,7 +108,7 @@ let videoToDownload;
 
 eventBus.subscribe("log", miLog);
 
-initUI();
+renderStartUI();
 
 // # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -118,29 +118,40 @@ function miLog(text) {
   console.log(now.toISOString() + " " + text);
 }
 
-function initUI() {
+function renderStartUI() {
   eventBus.publish("log", "initUI");
+
+  uploadedImage.setAttribute("src", "");
   uploadedImageContainer.classList.add("hidden");
   uploadedImageContainer.classList.remove("uploaded-image-container");
+
   restartContainer.classList.remove("restart-container");
   restartContainer.classList.add("hidden");
+
   screenLogContainer.classList.remove("screen-log");
   screenLogContainer.classList.add("hidden");
+
   pan2endRadio.checked = false;
-  zoomOutRadio.checked = false;
   pan2endContainer.classList.remove("container-selected");
   pan2endLabel.classList.remove("label-selected");
+
+  zoomOutRadio.checked = false;
   zoomOutContainer.classList.remove("container-selected");
   zoomOutLabel.classList.remove("label-selected");
 
   pan2endSection.classList.add("hidden");
   zoomOutSection.classList.add("hidden");
-
-  effecstDetails.removeAttribute("open");
   outputSection.querySelector("details").removeAttribute("open");
 
+  effecstDetails.removeAttribute("open");
+
   downloadVideoButton.classList.add("hidden");
-  //createVideoButton.classList.add("hidden");
+
+  createVideoButton.classList.remove("hidden");
+
+  formUpload.classList.remove("hidden");
+
+  // TODO: falta que borre el canvas y reestablezca los inputs
 }
 
 function handleSelectSizePresets() {
@@ -167,6 +178,7 @@ async function handleCreateVideo() {
   screenLogContainer.classList.remove("hidden");
 
   // sets the canvas size and the image size acording to the inputs
+  //TODO: ver que hace y documentar
   updateCanvasSize();
 
   if (pan2endRadio.checked) {
@@ -202,35 +214,30 @@ async function handleCreateVideo() {
 
 function handleRadioPan2end() {
   pan2endRadio.checked = true;
+  pan2endSection.classList.remove("hidden");
+  pan2endSection.querySelector("details").setAttribute("open", "");
   pan2endLabel.classList.add("label-selected");
   pan2endContainer.classList.add("container-selected");
+
+  zoomOutSection.classList.add("hidden");
   zoomOutLabel.classList.remove("label-selected");
   zoomOutContainer.classList.remove("container-selected");
 
-  pan2endSection.classList.remove("hidden");
-  pan2endSection.querySelector("details").setAttribute("open", "");
-
-  zoomOutSection.classList.add("hidden");
-
   outputSection.querySelector("details").setAttribute("open", "");
-
-  //createVideoButton.classList.remove("hidden");
 }
+
 function handleRadioZoomOut() {
-  pan2endLabel.classList.remove("label-selected");
-  pan2endContainer.classList.remove("container-selected");
   zoomOutRadio.checked = true;
+  zoomOutSection.classList.remove("hidden");
   zoomOutLabel.classList.add("label-selected");
   zoomOutContainer.classList.add("container-selected");
-
-  zoomOutSection.classList.remove("hidden");
   document.querySelector("#zoomout-section details").setAttribute("open", "");
-
-  pan2endSection.classList.add("hidden");
 
   outputSection.querySelector("details").setAttribute("open", "");
 
-  //createVideoButton.classList.remove("hidden");
+  pan2endSection.classList.add("hidden");
+  pan2endLabel.classList.remove("label-selected");
+  pan2endContainer.classList.remove("container-selected");
 }
 
 function handleUploadFormClick() {
@@ -240,14 +247,7 @@ function handleUploadFormClick() {
 }
 
 function handleRestartButton() {
-  formUpload.classList.remove("hidden");
-  restartContainer.classList.add("hidden");
-  restartContainer.classList.remove("restart-container");
-  uploadedImage.setAttribute("src", "");
-  uploadedImageContainer.classList.add("hidden");
-  uploadedImageContainer.classList.remove("uploaded-image-container");
-  createVideoButton.classList.remove("hidden");
-  initUI();
+  renderStartUI();
 }
 
 /**
@@ -256,10 +256,10 @@ function handleRestartButton() {
 function handleUpload(e) {
   const input = /** @type {HTMLInputElement} */ (e.target);
   loadImage(input.files[0]);
-  setUploadedUI();
+  renderNewImageUI();
 }
 
-function setUploadedUI() {
+function renderNewImageUI() {
   formUpload.classList.add("hidden");
   restartContainer.classList.remove("hidden");
   restartContainer.classList.add("restart-container");
@@ -268,6 +268,8 @@ function setUploadedUI() {
 
   effecstDetails.setAttribute("open", "");
 }
+
+//TODO: separar la carga de la imagen de como la muestra en el canvas?
 /**
  * @param {File} file
  */
@@ -396,7 +398,7 @@ function handleDrop(e) {
   }
   if (files.length > 0) {
     loadImage(files[0]);
-    setUploadedUI();
+    renderNewImageUI();
   }
 }
 
