@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "vitest",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
     "@diffusion-studio/ffmpeg-js": "^0.2.3"
-
   }
 }
