@@ -40,6 +40,27 @@ export async function createZoomOutVideo(
 
     await writeImageFiles(ffmpeg, videoFrames);
 
+    let blobfiles = "";
+    for (let i = 1; i <= videoFrames.length; i++) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfiles);
+    const blobFileList = new Blob([blobfiles], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+
+    let blobfilesReverted = "";
+    for (let i = videoFrames.length; i > 0; i--) {
+      blobfilesReverted += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfilesReverted);
+    const blobFileListReverted = new Blob([blobfilesReverted], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
     videosForward.push(
       await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
     );
@@ -182,7 +203,7 @@ export async function createPanVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
-  let chunkSize = 50;
+  let chunkSize = 20;
   for (let i = 0; i < totalFrames; i += chunkSize) {
     let videoFrames = await createFramesPanByChunks(
       canvas,
@@ -193,6 +214,28 @@ export async function createPanVideo(
     );
 
     await writeImageFiles(ffmpeg, videoFrames);
+
+    let blobfiles = "";
+    for (let i = 1; i <= videoFrames.length; i++) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfiles);
+    const blobFileList = new Blob([blobfiles], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+
+    let blobfilesReverted = "";
+    for (let i = videoFrames.length; i > 0; i--) {
+      blobfilesReverted += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfilesReverted);
+    const blobFileListReverted = new Blob([blobfilesReverted], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
 
     if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
       videosForward.push(

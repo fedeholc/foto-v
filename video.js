@@ -10,6 +10,7 @@ export async function concatAllVideos(ffmpeg, videos) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       for (let i = 0; i < videos.length; i++) {
+        console.log("video: ", i, videos[i]);
         await ffmpeg.writeFile(
           `input${i + 1}.mp4`,
           new Blob([videos[i].buffer], { type: "video/mp4" })
@@ -67,25 +68,46 @@ export async function execCreateVideo(
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       let reverseParam = "";
+      let filename = "imagesfilelist.txt";
       if (reverse) {
+        filename = "imagesfilelist-reverted.txt";
         reverseParam = "reverse,";
       }
 
       eventBus.publish("log", `Creating video (it may take a while...)`);
       // no cambiar el orden de estos parametros porque se rompe
       await ffmpeg.exec([
-        "-framerate",
+        "-r",
         `${frameRate}`,
+        "-f",
+        "concat",
+        "-safe",
+        "0",
         "-i",
-        "input%d.png", // Plantilla de entrada
+        filename,
         "-vf",
-        `${reverseParam}tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`, // Filtro para extender el último frame
+        `tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`,
         "-c:v",
         "libx264",
         "-pix_fmt",
         "yuv420p",
         "output.mp4",
       ]);
+
+      //usando reverse, trae problemas porque puede agotar la memoria
+      /* await ffmpeg.exec([
+        "-framerate",
+        `${frameRate}`,
+        "-i",
+        "input%d.png",
+        "-vf",
+        `reverse,tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`,
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "output.mp4",
+      ]); */
 
       //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 

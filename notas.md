@@ -29,21 +29,64 @@ Advertencias:
 
 ## Reverse video y performance
 
+```javascript
+await ffmpeg.exec([
+  "-framerate",
+  `${frameRate}`,
+  "-i",
+  "input%d.png",
+  "-vf",
+  `reverse,tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`,
+  "-c:v",
+  "libx264",
+  "-pix_fmt",
+  "yuv420p",
+  "output.mp4",
+]);
+```
+
 Inicialmente probe hacer la inversión del video con el parámetro -vf reverse, pero agotaba la memoria.
 Lo que hice para solucionarlo fue ir creando pequeñas partes del video final, que se vaya liberando memoria y luego juntar todo en un video.
-Para hacer el reverse en lugar de hacerlo con la función de ffmpeg refactorice la creación del video en dos partes, la creación de imagenes y el armado del video, la parte de las imagenes es la más lenta, pero una vez que se las tiene en un array se puede pasar el array invertido y crea el video en reverse, y eso es relativamente rápido.
+Para hacer el reverse en lugar de hacerlo con la función de ffmpeg refactorice la creación del video en dos partes, la creación de imagenes y el armado del video, la parte de las imagenes es la más lenta, pero una vez que se las tiene en un array se puede pasar el array invertido y crea el video en reverse, y eso es más rápido pero igual tiene que hacer la parte del writefile que insume tiempo.
+Trabajando con chunks de 20 frames logro que no se agote la memoria, pero tendría que probar que pasa en otras pcs, teléfono, etc, e investigar cuánto es que ffmpeg puede alocar de memoria en el browser, si se puede cambiar, etc.
 
-La que dejé de usar era:
+Otra opción es esta:
 
 ```javascript
 await ffmpeg.exec([
+  "-r",
+  `${frameRate}`,
+  "-f",
+  "concat",
+  "-safe",
+  "0",
   "-i",
-  "inputR.mp4", // Plantilla de entrada
+  "imagesfilelist.txt",
   "-vf",
-  "reverse",
-  "outputR.mp4",
+  `tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`,
+  "-c:v",
+  "libx264",
+  "-pix_fmt",
+  "yuv420p",
+  "output.mp4",
 ]);
 ```
+
+Antes de eso hay que crear la filelist. El siguiente código es para el caso de forward, para reverse hay que ir del último al primero.
+
+```javascript
+let blobfiles = "";
+for (let i = 0; i < videoFrames.length - 1; i++) {
+  blobfiles += `file 'input${i + 1}.png'\n`;
+}
+console.log(blobfiles);
+const blobFileList = new Blob([blobfiles], {
+  type: "text/plain",
+});
+await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+```
+
+En principio funciona, no se queda sin memoria, tendría que ver si es más lento y qué tanto, y por otra parte tira unos mensajes respecto a dropping frames, que no sé si es un problema o no (no parece serlo, pero tengo que probar mejor).
 
 ## Escritura de imagenes y performance
 
