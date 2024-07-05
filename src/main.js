@@ -10,8 +10,8 @@ import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
   createPanVideo,
-  createZoomOutVideo,
-  createZoomInVideo,
+  
+  createZoomVideo,
   getPanValues,
   getZoomValues,
 } from "./effects.js";
@@ -159,7 +159,7 @@ function renderStartUI() {
   canvasContainer.classList.add("hidden");
   canvasContainer.classList.remove("canvas-container");
 
-  // TODO: falta quereestablezca los inputs
+  // VER conviene reestablecer los valores por defecto de los inputs?
 }
 
 function handleSelectSizePresets() {
@@ -202,7 +202,7 @@ async function handleCreateVideo() {
     );
   } else if (zoomOutRadio.checked) {
     let zoomOutOptions = getZoomValues();
-    videoToDownload = await createZoomOutVideo(
+    videoToDownload = await createZoomVideo(
       ffmpeg,
       canvas,
       img,
@@ -210,7 +210,8 @@ async function handleCreateVideo() {
       zoomOutOptions.totalFrames,
       zoomOutOptions.pixelsShift,
       zoomOutOptions.frameRate,
-      zoomOutOptions.lastFrameRepeat
+      zoomOutOptions.lastFrameRepeat,
+      zoomOutOptions.direction
     );
   }
 

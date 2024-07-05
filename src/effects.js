@@ -28,234 +28,134 @@ export async function createZoomVideo(
   direction
 ) {
   let videos = [];
-  let videosReversed = [];
-  let videosForward = [];
+  let videosZoomOutReversed = [];
+  let videosZoomOutForward = [];
+  let videosZoomInReversed = [];
+  let videosZoomInForward = [];
 
   //TODO: En pan, crea los frames iguales para el forward como para el reverse y los invierte. En nuestro caso no se podría, habría que crearlos por separado.
 
-  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
-    let videoFrames = await createFramesZoomOutByChunks(
-      canvas,
-      img,
-      totalFrames,
-      pixelsShift,
-      zoomFit,
-      i,
-      i + CONFIG.chunkSize
-    );
+  if (direction === "ZO" || direction === "ZOZI") {
+    for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
+      let videoFrames = await createFramesZoomOutByChunks(
+        canvas,
+        img,
+        totalFrames,
+        pixelsShift,
+        zoomFit,
+        i,
+        i + CONFIG.chunkSize
+      );
 
-    await writeImageFiles(ffmpeg, videoFrames);
+      await writeImageFiles(ffmpeg, videoFrames);
 
-    let blobfiles = "";
-    for (let i = 1; i <= videoFrames.length; i++) {
-      blobfiles += `file 'input${i}.png'\n`;
+      let blobfiles = "";
+      for (let i = 1; i <= videoFrames.length; i++) {
+        blobfiles += `file 'input${i}.png'\n`;
+      }
+      console.log(blobfiles);
+      const blobFileList = new Blob([blobfiles], {
+        type: "text/plain",
+      });
+
+      await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+
+      let blobfilesReverted = "";
+      for (let i = videoFrames.length; i > 0; i--) {
+        blobfilesReverted += `file 'input${i}.png'\n`;
+      }
+      console.log(blobfilesReverted);
+      const blobFileListReverted = new Blob([blobfilesReverted], {
+        type: "text/plain",
+      });
+
+      await ffmpeg.writeFile(
+        "imagesfilelist-reverted.txt",
+        blobFileListReverted
+      );
+
+      if (direction === "ZO" || direction === "ZOZI") {
+        videosZoomOutForward.push(
+          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+        );
+      }
+
+      if (direction === "ZOZI") {
+        videosZoomOutReversed.unshift(
+          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
+        );
+      }
+      if (direction === "ZO") {
+        videos = videosZoomOutForward;
+      }
+      if (direction === "ZOZI") {
+        videos = videosZoomOutForward.concat(videosZoomOutReversed);
+      }
+      deleteImageFiles(ffmpeg, videoFrames.length);
     }
-    console.log(blobfiles);
-    const blobFileList = new Blob([blobfiles], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-    let blobfilesReverted = "";
-    for (let i = videoFrames.length; i > 0; i--) {
-      blobfilesReverted += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfilesReverted);
-    const blobFileListReverted = new Blob([blobfilesReverted], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
-    videosForward.push(
-      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-    );
-
-    //VER ok para implementar el ida y vuelta
-    /*  videosReversed.unshift(
-      await execCreateVideo(
-        ffmpeg,
-        (frameRate),
-        (lastFrameRepeat),
-        true
-      )
-    );
-
-    videos = videosForward.concat(videosReversed); */
-
-    videos = videosForward;
-
-    deleteImageFiles(ffmpeg, videoFrames.length);
   }
 
-  let resultVideo = await concatAllVideos(ffmpeg, videos);
-  return resultVideo;
-}
+  if (direction === "ZI" || direction === "ZIZO") {
+    for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
+      let videoFrames = await createFramesZoomInByChunks(
+        canvas,
+        img,
+        totalFrames,
+        pixelsShift,
+        zoomFit,
+        i,
+        i + CONFIG.chunkSize
+      );
 
-/**
- * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
- * @param {HTMLCanvasElement} canvas
- * @param {HTMLImageElement} img
- * @param {"fitHeight" | "fitWidth"} zoomFit
- * @param {number} totalFrames
- * @param {number} pixelsShift
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @returns {Promise<{buffer: BlobPart;}>}
- */
-export async function createZoomOutVideo(
-  ffmpeg,
-  canvas,
-  img,
-  zoomFit,
-  totalFrames,
-  pixelsShift,
-  frameRate,
-  lastFrameRepeat
-) {
-  let videos = [];
-  let videosReversed = [];
-  let videosForward = [];
+      await writeImageFiles(ffmpeg, videoFrames);
 
-  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
-    let videoFrames = await createFramesZoomOutByChunks(
-      canvas,
-      img,
-      totalFrames,
-      pixelsShift,
-      zoomFit,
-      i,
-      i + CONFIG.chunkSize
-    );
+      let blobfiles = "";
+      for (let i = 1; i <= videoFrames.length; i++) {
+        blobfiles += `file 'input${i}.png'\n`;
+      }
+      console.log(blobfiles);
+      const blobFileList = new Blob([blobfiles], {
+        type: "text/plain",
+      });
 
-    await writeImageFiles(ffmpeg, videoFrames);
+      await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
 
-    let blobfiles = "";
-    for (let i = 1; i <= videoFrames.length; i++) {
-      blobfiles += `file 'input${i}.png'\n`;
+      let blobfilesReverted = "";
+      for (let i = videoFrames.length; i > 0; i--) {
+        blobfilesReverted += `file 'input${i}.png'\n`;
+      }
+      console.log(blobfilesReverted);
+      const blobFileListReverted = new Blob([blobfilesReverted], {
+        type: "text/plain",
+      });
+
+      await ffmpeg.writeFile(
+        "imagesfilelist-reverted.txt",
+        blobFileListReverted
+      );
+
+      if (direction === "ZI" || direction === "ZIZO") {
+        videosZoomInForward.push(
+          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+        );
+      }
+
+      if (direction === "ZIZO") {
+        videosZoomInReversed.unshift(
+          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
+        );
+      }
+      if (direction === "ZI") {
+        videos = videosZoomInForward;
+      }
+      if (direction === "ZIZO") {
+        videos = videosZoomInForward.concat(videosZoomInReversed);
+      }
+      deleteImageFiles(ffmpeg, videoFrames.length);
     }
-    console.log(blobfiles);
-    const blobFileList = new Blob([blobfiles], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-    let blobfilesReverted = "";
-    for (let i = videoFrames.length; i > 0; i--) {
-      blobfilesReverted += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfilesReverted);
-    const blobFileListReverted = new Blob([blobfilesReverted], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
-    videosForward.push(
-      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-    );
-
-    //VER ok para implementar el ida y vuelta
-    /*  videosReversed.unshift(
-      await execCreateVideo(
-        ffmpeg,
-        (frameRate),
-        (lastFrameRepeat),
-        true
-      )
-    );
-
-    videos = videosForward.concat(videosReversed); */
-
-    videos = videosForward;
-
-    deleteImageFiles(ffmpeg, videoFrames.length);
   }
-
   let resultVideo = await concatAllVideos(ffmpeg, videos);
-  return resultVideo;
-}
 
-/**
- * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
- * @param {HTMLCanvasElement} canvas
- * @param {HTMLImageElement} img
- * @param {"fitHeight" | "fitWidth"} zoomFit
- * @param {number} totalFrames
- * @param {number} pixelsShift
- * @param {number} frameRate
- * @param {number} lastFrameRepeat
- * @returns {Promise<{buffer: BlobPart;}>}
- */
-export async function createZoomInVideo(
-  ffmpeg,
-  canvas,
-  img,
-  zoomFit,
-  totalFrames,
-  pixelsShift,
-  frameRate,
-  lastFrameRepeat
-) {
-  let videos = [];
-  let videosReversed = [];
-  let videosForward = [];
-  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
-    let videoFrames = await createFramesZoomInByChunks(
-      canvas,
-      img,
-      totalFrames,
-      pixelsShift,
-      zoomFit,
-      i,
-      i + CONFIG.chunkSize
-    );
-
-    await writeImageFiles(ffmpeg, videoFrames);
-
-    let blobfiles = "";
-    for (let i = 1; i <= videoFrames.length; i++) {
-      blobfiles += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfiles);
-    const blobFileList = new Blob([blobfiles], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-    let blobfilesReverted = "";
-    for (let i = videoFrames.length; i > 0; i--) {
-      blobfilesReverted += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfilesReverted);
-    const blobFileListReverted = new Blob([blobfilesReverted], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
-    videosForward.push(
-      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-    );
-
-    //VER ok para implementar el ida y vuelta
-    /*  videosReversed.unshift(
-      await execCreateVideo(
-        ffmpeg,
-        (frameRate),
-        (lastFrameRepeat),
-        true
-      )
-    );
-
-    videos = videosForward.concat(videosReversed); */
-
-    videos = videosForward;
-
-    deleteImageFiles(ffmpeg, videoFrames.length);
-  }
-
-  let resultVideo = await concatAllVideos(ffmpeg, videos);
   return resultVideo;
 }
 
@@ -291,6 +191,7 @@ export function getZoomValues() {
     pixelsShift: parseInt(inputPixelsShift.value),
     frameRate: parseInt(inputFrameRate.value),
     lastFrameRepeat: parseInt(inputLastFrameRepeat.value),
+    direction: selectZoomDirection.value,
   };
 }
 
