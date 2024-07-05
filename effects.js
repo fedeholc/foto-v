@@ -11,6 +11,97 @@ import { execCreateVideo, concatAllVideos } from "./video.js";
  * @param {number} pixelsShift
  * @param {number} frameRate
  * @param {number} lastFrameRepeat
+ * @param {string} direction
+ * @returns {Promise<{buffer: BlobPart;}>}
+ */
+
+//TODO: acá estoy armando la generica que luego bifurca según la dirección, luego reemplazar la que está en el handler del botón.
+export async function createZoomVideo(
+  ffmpeg,
+  canvas,
+  img,
+  zoomFit,
+  totalFrames,
+  pixelsShift,
+  frameRate,
+  lastFrameRepeat,
+  direction
+) {
+  let videos = [];
+  let videosReversed = [];
+  let videosForward = [];
+  let chunkSize = 50;
+
+  //TODO: En pan, crea los frames iguales para el forward como para el reverse y los invierte. En nuestro caso no se podría, habría que crearlos por separado.
+
+  for (let i = 0; i < totalFrames; i += chunkSize) {
+    let videoFrames = await createFramesZoomOutByChunks(
+      canvas,
+      img,
+      totalFrames,
+      pixelsShift,
+      zoomFit,
+      i,
+      i + chunkSize
+    );
+
+    await writeImageFiles(ffmpeg, videoFrames);
+
+    let blobfiles = "";
+    for (let i = 1; i <= videoFrames.length; i++) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfiles);
+    const blobFileList = new Blob([blobfiles], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+
+    let blobfilesReverted = "";
+    for (let i = videoFrames.length; i > 0; i--) {
+      blobfilesReverted += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfilesReverted);
+    const blobFileListReverted = new Blob([blobfilesReverted], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
+    videosForward.push(
+      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+    );
+
+    //VER ok para implementar el ida y vuelta
+    /*  videosReversed.unshift(
+      await execCreateVideo(
+        ffmpeg,
+        (frameRate),
+        (lastFrameRepeat),
+        true
+      )
+    );
+
+    videos = videosForward.concat(videosReversed); */
+
+    videos = videosForward;
+
+    deleteImageFiles(ffmpeg, videoFrames.length);
+  }
+
+  let resultVideo = await concatAllVideos(ffmpeg, videos);
+  return resultVideo;
+}
+
+/**
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {"fitHeight" | "fitWidth"} zoomFit
+ * @param {number} totalFrames
+ * @param {number} pixelsShift
+ * @param {number} frameRate
+ * @param {number} lastFrameRepeat
  * @returns {Promise<{buffer: BlobPart;}>}
  */
 export async function createZoomOutVideo(
