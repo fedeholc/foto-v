@@ -410,7 +410,7 @@ details[open] summary {
   accent-color: var(--color21);
 }
 
-#canvas-container {
+.canvas-container {
   display: flex;
   flex-direction: row;
   align-items: center;

@@ -93,6 +93,8 @@ const outputSection = document.querySelector("#output-section");
 
 const finalResolutionInfo = document.querySelector(".final-resolution-info");
 
+const canvasContainer = document.querySelector("#canvas-container");
+
 // Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobalScreenLogger.init(screenLogDiv);
@@ -102,7 +104,7 @@ const ctx = canvas.getContext("2d");
 const ffmpeg = new FFmpeg({
   config: "gpl-extended",
 });
-const img = new Image();
+let img = new Image();
 
 /** @typedef {{buffer: BlobPart}} */
 let videoToDownload;
@@ -125,6 +127,7 @@ function renderStartUI() {
   uploadedImage.setAttribute("src", "");
   uploadedImageContainer.classList.add("hidden");
   uploadedImageContainer.classList.remove("uploaded-image-container");
+  img = new Image();
 
   restartContainer.classList.remove("restart-container");
   restartContainer.classList.add("hidden");
@@ -152,7 +155,11 @@ function renderStartUI() {
 
   formUpload.classList.remove("hidden");
 
-  // TODO: falta que borre el canvas y reestablezca los inputs
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvasContainer.classList.add("hidden");
+  canvasContainer.classList.remove("canvas-container");
+
+  // TODO: falta quereestablezca los inputs
 }
 
 function handleSelectSizePresets() {
@@ -268,6 +275,9 @@ function renderNewImageUI() {
   uploadedImageContainer.classList.add("uploaded-image-container");
 
   effecstDetails.setAttribute("open", "");
+
+  canvasContainer.classList.remove("hidden");
+  canvasContainer.classList.add("canvas-container");
 }
 
 //TODO: separar la carga de la imagen de como la muestra en el canvas?
