@@ -1,7 +1,7 @@
 import eventBus from "./eventBus.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
-
+import { CONFIG } from "./config.js";
 /**
  * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
  * @param {HTMLCanvasElement} canvas
@@ -30,11 +30,10 @@ export async function createZoomVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
-  let chunkSize = 50;
 
   //TODO: En pan, crea los frames iguales para el forward como para el reverse y los invierte. En nuestro caso no se podría, habría que crearlos por separado.
 
-  for (let i = 0; i < totalFrames; i += chunkSize) {
+  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = await createFramesZoomOutByChunks(
       canvas,
       img,
@@ -42,7 +41,7 @@ export async function createZoomVideo(
       pixelsShift,
       zoomFit,
       i,
-      i + chunkSize
+      i + CONFIG.chunkSize
     );
 
     await writeImageFiles(ffmpeg, videoFrames);
@@ -117,8 +116,8 @@ export async function createZoomOutVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
-  let chunkSize = 50;
-  for (let i = 0; i < totalFrames; i += chunkSize) {
+
+  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = await createFramesZoomOutByChunks(
       canvas,
       img,
@@ -126,7 +125,7 @@ export async function createZoomOutVideo(
       pixelsShift,
       zoomFit,
       i,
-      i + chunkSize
+      i + CONFIG.chunkSize
     );
 
     await writeImageFiles(ffmpeg, videoFrames);
@@ -201,8 +200,7 @@ export async function createZoomInVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
-  let chunkSize = 50;
-  for (let i = 0; i < totalFrames; i += chunkSize) {
+  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = await createFramesZoomInByChunks(
       canvas,
       img,
@@ -210,7 +208,7 @@ export async function createZoomInVideo(
       pixelsShift,
       zoomFit,
       i,
-      i + chunkSize
+      i + CONFIG.chunkSize
     );
 
     await writeImageFiles(ffmpeg, videoFrames);
@@ -380,14 +378,13 @@ export async function createPanVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
-  let chunkSize = 20;
-  for (let i = 0; i < totalFrames; i += chunkSize) {
+  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = await createFramesPanByChunks(
       canvas,
       img,
       pixelsShift,
       i,
-      i + chunkSize
+      i + CONFIG.chunkSize
     );
 
     await writeImageFiles(ffmpeg, videoFrames);
