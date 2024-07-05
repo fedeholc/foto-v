@@ -86,6 +86,90 @@ export async function createZoomOutVideo(
   return resultVideo;
 }
 
+/**
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {"fitHeight" | "fitWidth"} zoomFit
+ * @param {number} totalFrames
+ * @param {number} pixelsShift
+ * @param {number} frameRate
+ * @param {number} lastFrameRepeat
+ * @returns {Promise<{buffer: BlobPart;}>}
+ */
+export async function createZoomInVideo(
+  ffmpeg,
+  canvas,
+  img,
+  zoomFit,
+  totalFrames,
+  pixelsShift,
+  frameRate,
+  lastFrameRepeat
+) {
+  let videos = [];
+  let videosReversed = [];
+  let videosForward = [];
+  let chunkSize = 50;
+  for (let i = 0; i < totalFrames; i += chunkSize) {
+    let videoFrames = await createFramesZoomInByChunks(
+      canvas,
+      img,
+      totalFrames,
+      pixelsShift,
+      zoomFit,
+      i,
+      i + chunkSize
+    );
+
+    await writeImageFiles(ffmpeg, videoFrames);
+
+    let blobfiles = "";
+    for (let i = 1; i <= videoFrames.length; i++) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfiles);
+    const blobFileList = new Blob([blobfiles], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
+
+    let blobfilesReverted = "";
+    for (let i = videoFrames.length; i > 0; i--) {
+      blobfilesReverted += `file 'input${i}.png'\n`;
+    }
+    console.log(blobfilesReverted);
+    const blobFileListReverted = new Blob([blobfilesReverted], {
+      type: "text/plain",
+    });
+
+    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
+    videosForward.push(
+      await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+    );
+
+    //VER ok para implementar el ida y vuelta
+    /*  videosReversed.unshift(
+      await execCreateVideo(
+        ffmpeg,
+        (frameRate),
+        (lastFrameRepeat),
+        true
+      )
+    );
+
+    videos = videosForward.concat(videosReversed); */
+
+    videos = videosForward;
+
+    deleteImageFiles(ffmpeg, videoFrames.length);
+  }
+
+  let resultVideo = await concatAllVideos(ffmpeg, videos);
+  return resultVideo;
+}
+
 export function getZoomValues() {
   const selectZoomFit = /** @type {HTMLSelectElement} */ (
     document.querySelector("#zoomout-fit")
@@ -366,6 +450,80 @@ export function createFramesZoomOutByChunks(
         newHeight = Math.round((canvas.width / img.width) * img.height);
         height =
           newHeight + totalFrames * pixelsShift - startPosition * pixelsShift;
+      }
+
+      //VER el redondear hacía que se viera mal cuando el scaleFactor era de 1 pixel. Habría que ver si dejarlo así o probar redondear tanto x e y como el width y height para que siempre tenga enteros divisibles por 2.
+      //const x = Math.round(canvas.width / 2 - width / 2);
+      //const y = Math.round(canvas.height / 2 - height / 2);
+
+      const x = canvas.width / 2 - width / 2;
+      const y = canvas.height / 2 - height / 2;
+
+      ctx.drawImage(img, x, y, width, height);
+      videoFrames.push(canvas.toDataURL("image/png"));
+      startPosition++;
+      if (startPosition <= endPosition && startPosition <= totalFrames) {
+        requestAnimationFrame(step);
+      } else {
+        resolve(videoFrames);
+      }
+    }
+  });
+}
+
+/**
+ * @param {number} totalFrames
+ * @param {number} pixelsShift
+ * @param {HTMLCanvasElement} canvas
+ * @param {HTMLImageElement} img
+ * @param {("fitWidth" | "fitHeight")} fit adjust image to width or height
+ * @param {number} startPosition
+ * @param {number} endPosition
+ * @returns {Promise<string[]>}
+ */
+export function createFramesZoomInByChunks(
+  canvas,
+  img,
+  totalFrames,
+  pixelsShift,
+  fit,
+  startPosition,
+  endPosition
+) {
+  return new Promise((resolve, reject) => {
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      return reject(new Error("Error obtaining 2d context from canvas"));
+    }
+    if (!img.complete) {
+      return reject(new Error("Image not loaded"));
+    }
+
+    let videoFrames = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    requestAnimationFrame(step);
+
+    function step() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let height,
+        width,
+        newHeight,
+        newWidth = 0;
+
+      //adaptar para que encaje de altura
+      if (fit === "fitHeight") {
+        height = canvas.height + startPosition * pixelsShift;
+        newWidth = Math.round((canvas.height / img.height) * img.width);
+        width = newWidth + startPosition * pixelsShift;
+      }
+
+      //adaptar para que encaje de ancho
+      if (fit === "fitWidth") {
+        width = canvas.width + startPosition * pixelsShift;
+        newHeight = Math.round((canvas.width / img.width) * img.height);
+        height = newHeight + startPosition * pixelsShift;
       }
 
       //VER el redondear hacía que se viera mal cuando el scaleFactor era de 1 pixel. Habría que ver si dejarlo así o probar redondear tanto x e y como el width y height para que siempre tenga enteros divisibles por 2.

@@ -11,6 +11,7 @@ import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
   createPanVideo,
   createZoomOutVideo,
+  createZoomInVideo,
   getPanValues,
   getZoomValues,
 } from "./effects.js";
