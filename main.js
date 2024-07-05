@@ -71,11 +71,11 @@ createVideoButton.addEventListener("click", handleCreateVideo);
 
 const effecstDetails = document.querySelector("#effects-details");
 
-const pan2endContainer = document.querySelector("#pan-radio-container");
-const pan2endLabel = document.querySelector("#pan-label");
+const panContainer = document.querySelector("#pan-radio-container");
+const panLabel = document.querySelector("#pan-label");
 /** @type {HTMLInputElement} */
-const pan2endRadio = document.querySelector("#pan-radio");
-pan2endContainer.addEventListener("click", handleRadioPan2end);
+const panRadio = document.querySelector("#pan-radio");
+panContainer.addEventListener("click", handleRadioPan);
 
 const zoomOutContainer = document.querySelector("#zoom-radio-container");
 const zoomOutLabel = document.querySelector("#zoom-label");
@@ -87,7 +87,7 @@ const screenLogContainer = document.querySelector("#screen-log");
 const downloadVideoButton = document.querySelector("#download-button");
 downloadVideoButton.addEventListener("click", handleDownloadVideo);
 
-const pan2endSection = document.querySelector("#pan-section");
+const panSection = document.querySelector("#pan-section");
 const zoomOutSection = document.querySelector("#zoom-section");
 const outputSection = document.querySelector("#output-section");
 
@@ -132,15 +132,15 @@ function renderStartUI() {
   screenLogContainer.classList.remove("screen-log");
   screenLogContainer.classList.add("hidden");
 
-  pan2endRadio.checked = false;
-  pan2endContainer.classList.remove("container-selected");
-  pan2endLabel.classList.remove("label-selected");
+  panRadio.checked = false;
+  panContainer.classList.remove("container-selected");
+  panLabel.classList.remove("label-selected");
 
   zoomOutRadio.checked = false;
   zoomOutContainer.classList.remove("container-selected");
   zoomOutLabel.classList.remove("label-selected");
 
-  pan2endSection.classList.add("hidden");
+  panSection.classList.add("hidden");
   zoomOutSection.classList.add("hidden");
   outputSection.querySelector("details").removeAttribute("open");
 
@@ -182,7 +182,7 @@ async function handleCreateVideo() {
   //TODO: ver que hace y documentar
   updateCanvasSize();
 
-  if (pan2endRadio.checked) {
+  if (panRadio.checked) {
     let panOptions = getPanValues();
     videoToDownload = await createPanVideo(
       ffmpeg,
@@ -213,12 +213,12 @@ async function handleCreateVideo() {
   }
 }
 
-function handleRadioPan2end() {
-  pan2endRadio.checked = true;
-  pan2endSection.classList.remove("hidden");
-  pan2endSection.querySelector("details").setAttribute("open", "");
-  pan2endLabel.classList.add("label-selected");
-  pan2endContainer.classList.add("container-selected");
+function handleRadioPan() {
+  panRadio.checked = true;
+  panSection.classList.remove("hidden");
+  panSection.querySelector("details").setAttribute("open", "");
+  panLabel.classList.add("label-selected");
+  panContainer.classList.add("container-selected");
 
   zoomOutSection.classList.add("hidden");
   zoomOutLabel.classList.remove("label-selected");
@@ -236,9 +236,9 @@ function handleRadioZoomOut() {
 
   outputSection.querySelector("details").setAttribute("open", "");
 
-  pan2endSection.classList.add("hidden");
-  pan2endLabel.classList.remove("label-selected");
-  pan2endContainer.classList.remove("container-selected");
+  panSection.classList.add("hidden");
+  panLabel.classList.remove("label-selected");
+  panContainer.classList.remove("container-selected");
 }
 
 function handleUploadFormClick() {

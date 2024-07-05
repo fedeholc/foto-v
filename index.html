@@ -51,7 +51,7 @@
         <div></div>
         <div id="effects-container">
           <div id="pan-radio-container">
-            <input type="radio" id="pan-radio" name="effects" value="pan2end">
+            <input type="radio" id="pan-radio" name="effects" value="pan">
             <label id="pan-label" for="pan-radio">Pan</label>
           </div>
           <div id="zoom-radio-container">
@@ -111,6 +111,16 @@
               <option value="fitWidth">Width</option>
             </select>
           </div>
+          <div>
+            <label for="zoom-direction">Zoom direction</label>
+            <select name="zoom-direction" id="zoom-direction">
+              <option value="ZI">Zoom In</option>
+              <option value="ZO">Zoom Out</option>
+              <option value="ZIZO">ZI + ZO</option>
+              <option value="ZOZI">ZO + ZI</option>
+
+            </select>
+          </div>
         </div>
       </details>
     </section>
@@ -167,8 +177,7 @@
       <div><button id="create-video-button">CREATE VIDEO</button></div>
       <div><button id="download-button">DOWNLOAD VIDEO</button></div>
 
-      <!-- <button id="btn-pan2end">Generar Vid: Pan2end</button>
-      <button id="btn-zoom-out">Generar Vid: zoomOut</button> -->
+
     </section>
 
   </main>

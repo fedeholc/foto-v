@@ -193,7 +193,9 @@ export function getZoomValues() {
   const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
     document.querySelector("#zoom-last-frame")
   );
-
+  const selectZoomDirection = /** @type {HTMLSelectElement} */ (
+    document.querySelector("#zoom-direction")
+  );
   return {
     zoomFit,
     totalFrames: parseInt(inputTotalFrames.value),
