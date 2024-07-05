@@ -172,7 +172,7 @@ export async function createZoomInVideo(
 
 export function getZoomValues() {
   const selectZoomFit = /** @type {HTMLSelectElement} */ (
-    document.querySelector("#zoomout-fit")
+    document.querySelector("#zoom-fit")
   );
 
   /** @type {"fitHeight" | "fitWidth"} */
@@ -182,16 +182,16 @@ export function getZoomValues() {
   }
 
   const inputTotalFrames = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-total-frames")
+    document.querySelector("#zoom-total-frames")
   );
   const inputPixelsShift = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-pixels-shift")
+    document.querySelector("#zoom-pixels-shift")
   );
   const inputFrameRate = /** @type {HTMLInputElement} */ (
     document.querySelector("#frame-rate")
   );
   const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-    document.querySelector("#zoomout-last-frame")
+    document.querySelector("#zoom-last-frame")
   );
 
   return {
@@ -207,13 +207,13 @@ export function getPanValues() {
   //VER dçonde poner esto? acà? afuera de la funciòn? modulo de dom elements? al inicio? agrupar todos los dom elements en un solo lugar o priorizar locality of behavior y poner aca?
 
   const inputPixelsShift = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-pixels-shift")
+    document.querySelector("#pan-pixels-shift")
   );
   const inputFrameRate = /** @type {HTMLInputElement} */ (
     document.querySelector("#frame-rate")
   );
   const inputLastFrameRepeat = /** @type {HTMLInputElement} */ (
-    document.querySelector("#pan2end-last-frame")
+    document.querySelector("#pan-last-frame")
   );
   const selectPanDirection = /** @type {HTMLSelectElement} */ (
     document.querySelector("#pan-direction")

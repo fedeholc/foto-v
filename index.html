@@ -50,9 +50,9 @@
         <summary>Effect</summary>
         <div></div>
         <div id="effects-container">
-          <div id="pan2end-radio-container">
-            <input type="radio" id="pan2end-radio" name="effects" value="pan2end">
-            <label id="pan2end-label" for="pan2end-radio">Pan</label>
+          <div id="pan-radio-container">
+            <input type="radio" id="pan-radio" name="effects" value="pan2end">
+            <label id="pan-label" for="pan-radio">Pan</label>
           </div>
           <div id="zoom-radio-container">
             <input type="radio" id="zoom-radio" name="effects" value="zoom">
@@ -62,17 +62,17 @@
       </details>
     </div>
 
-    <section id="pan2end-section" class="pan2end-section">
+    <section id="pan-section" class="pan-section">
       <details>
         <summary>Pan settings</summary>
         <div class="inputs-grid">
           <div>
             <label>Pixels shift (per frame)</label>
-            <input type="number" id="pan2end-pixels-shift" name="pan2end-pixels-shift" placeholder=2 value=2 min="1" />
+            <input type="number" id="pan-pixels-shift" name="pan-pixels-shift" placeholder=2 value=2 min="1" />
           </div>
           <div>
             <label>Last frame repeat (in seconds)</label>
-            <input type="number" id="pan2end-last-frame" name="pan2end-last-frame" placeholder=0 value=0 />
+            <input type="number" id="pan-last-frame" name="pan-last-frame" placeholder=0 value=0 />
           </div>
           <div>
             <label for="pan-direction">Pan direction</label>
@@ -88,26 +88,25 @@
         </div>
       </details>
     </section>
-    <section id="zoomout-section" class="zoomout-section">
+    <section id="zoom-section" class="zoom-section">
       <details>
         <summary>Zoom Out settings</summary>
         <div class="inputs-grid">
           <div>
             <label>Pixels shift (per frame)</label>
-            <input type="number" id="zoomout-pixels-shift" name="zoomout-pixels-shift" placeholder=2 value=2 min="1" />
+            <input type="number" id="zoom-pixels-shift" name="zoom-pixels-shift" placeholder=2 value=2 min="1" />
           </div>
           <div>
             <label>Total frames</label>
-            <input type="number" id="zoomout-total-frames" name="zoomout-total-frames" placeholder=60 value=60
-              min="1" />
+            <input type="number" id="zoom-total-frames" name="zoom-total-frames" placeholder=60 value=60 min="1" />
           </div>
           <div>
             <label>Last frame repeat (in seconds)</label>
-            <input type="number" id="zoomout-last-frame" name="zoomout-last-frame" placeholder=0 value=0 />
+            <input type="number" id="zoom-last-frame" name="zoom-last-frame" placeholder=0 value=0 />
           </div>
           <div>
-            <label for="zoomout-fit">Zoom fit</label>
-            <select name="zoomout-fit" id="zoomout-fit">
+            <label for="zoom-fit">Zoom fit</label>
+            <select name="zoom-fit" id="zoom-fit">
               <option value="fitHeight">Height</option>
               <option value="fitWidth">Width</option>
             </select>

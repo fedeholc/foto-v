@@ -71,10 +71,10 @@ createVideoButton.addEventListener("click", handleCreateVideo);
 
 const effecstDetails = document.querySelector("#effects-details");
 
-const pan2endContainer = document.querySelector("#pan2end-radio-container");
-const pan2endLabel = document.querySelector("#pan2end-label");
+const pan2endContainer = document.querySelector("#pan-radio-container");
+const pan2endLabel = document.querySelector("#pan-label");
 /** @type {HTMLInputElement} */
-const pan2endRadio = document.querySelector("#pan2end-radio");
+const pan2endRadio = document.querySelector("#pan-radio");
 pan2endContainer.addEventListener("click", handleRadioPan2end);
 
 const zoomOutContainer = document.querySelector("#zoom-radio-container");
@@ -87,8 +87,8 @@ const screenLogContainer = document.querySelector("#screen-log");
 const downloadVideoButton = document.querySelector("#download-button");
 downloadVideoButton.addEventListener("click", handleDownloadVideo);
 
-const pan2endSection = document.querySelector("#pan2end-section");
-const zoomOutSection = document.querySelector("#zoomout-section");
+const pan2endSection = document.querySelector("#pan-section");
+const zoomOutSection = document.querySelector("#zoom-section");
 const outputSection = document.querySelector("#output-section");
 
 const finalResolutionInfo = document.querySelector(".final-resolution-info");
@@ -232,7 +232,7 @@ function handleRadioZoomOut() {
   zoomOutSection.classList.remove("hidden");
   zoomOutLabel.classList.add("label-selected");
   zoomOutContainer.classList.add("container-selected");
-  document.querySelector("#zoomout-section details").setAttribute("open", "");
+  document.querySelector("#zoom-section details").setAttribute("open", "");
 
   outputSection.querySelector("details").setAttribute("open", "");
 

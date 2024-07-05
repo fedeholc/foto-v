@@ -193,8 +193,8 @@ canvas {
   display: block;
 }
 
-.pan2end-section,
-.zoomout-section,
+.pan-section,
+.zoom-section,
 .output-section {
   gap: 1rem;
   display: flex;
