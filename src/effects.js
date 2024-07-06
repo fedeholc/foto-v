@@ -39,8 +39,6 @@ function createFileList(from, to) {
  * @param {string} direction
  * @returns {Promise<{buffer: BlobPart;}>}
  */
-
-//TODO: acá estoy armando la generica que luego bifurca según la dirección, luego reemplazar la que está en el handler del botón.
 export async function createZoomVideo(
   ffmpeg,
   canvas,
@@ -53,15 +51,13 @@ export async function createZoomVideo(
   direction
 ) {
   let videos = [];
-  let videosZoomOutReversed = [];
-  let videosZoomOutForward = [];
-  let videosZoomInReversed = [];
-  let videosZoomInForward = [];
+  let videosReversed = [];
+  let videosForward = [];
 
-  //TODO: poner el if dentro del for para unifcar con ZI
-  if (direction === "ZO" || direction === "ZOZI") {
-    for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
-      let videoFrames = await createFramesZoomOutByChunks(
+  for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
+    let videoFrames = [];
+    if (direction === "ZO" || direction === "ZOZI") {
+      videoFrames = await createFramesZoomOutByChunks(
         canvas,
         img,
         totalFrames,
@@ -70,43 +66,10 @@ export async function createZoomVideo(
         i,
         i + CONFIG.chunkSize
       );
-
-      await writeImageFiles(ffmpeg, videoFrames);
-
-      await ffmpeg.writeFile(
-        "imagesfilelist.txt",
-        createFileList(1, videoFrames.length)
-      );
-
-      await ffmpeg.writeFile(
-        "imagesfilelist-reverted.txt",
-        createFileList(videoFrames.length, 1)
-      );
-
-      if (direction === "ZO" || direction === "ZOZI") {
-        videosZoomOutForward.push(
-          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-        );
-      }
-
-      if (direction === "ZOZI") {
-        videosZoomOutReversed.unshift(
-          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
-        );
-      }
-      if (direction === "ZO") {
-        videos = videosZoomOutForward;
-      }
-      if (direction === "ZOZI") {
-        videos = videosZoomOutForward.concat(videosZoomOutReversed);
-      }
-      deleteImageFiles(ffmpeg, videoFrames.length);
     }
-  }
 
-  if (direction === "ZI" || direction === "ZIZO") {
-    for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
-      let videoFrames = await createFramesZoomInByChunks(
+    if (direction === "ZI" || direction === "ZIZO") {
+      videoFrames = await createFramesZoomInByChunks(
         canvas,
         img,
         totalFrames,
@@ -115,39 +78,44 @@ export async function createZoomVideo(
         i,
         i + CONFIG.chunkSize
       );
-
-      await writeImageFiles(ffmpeg, videoFrames);
-
-      await ffmpeg.writeFile(
-        "imagesfilelist.txt",
-        createFileList(1, videoFrames.length)
-      );
-
-      await ffmpeg.writeFile(
-        "imagesfilelist-reverted.txt",
-        createFileList(videoFrames.length, 1)
-      );
-
-      if (direction === "ZI" || direction === "ZIZO") {
-        videosZoomInForward.push(
-          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-        );
-      }
-
-      if (direction === "ZIZO") {
-        videosZoomInReversed.unshift(
-          await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
-        );
-      }
-      if (direction === "ZI") {
-        videos = videosZoomInForward;
-      }
-      if (direction === "ZIZO") {
-        videos = videosZoomInForward.concat(videosZoomInReversed);
-      }
-      deleteImageFiles(ffmpeg, videoFrames.length);
     }
+
+    await writeImageFiles(ffmpeg, videoFrames);
+
+    await ffmpeg.writeFile(
+      "imagesfilelist.txt",
+      createFileList(1, videoFrames.length)
+    );
+
+    await ffmpeg.writeFile(
+      "imagesfilelist-reverted.txt",
+      createFileList(videoFrames.length, 1)
+    );
+
+    if (
+      direction === "ZO" ||
+      direction === "ZOZI" ||
+      direction === "ZIZO" ||
+      direction === "ZI"
+    ) {
+      videosForward.push(
+        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+      );
+    }
+    if (direction === "ZOZI" || direction === "ZIZO") {
+      videosReversed.unshift(
+        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
+      );
+    }
+    if (direction === "ZO" || direction === "ZI") {
+      videos = videosForward;
+    }
+    if (direction === "ZOZI" || direction === "ZIZO") {
+      videos = videosForward.concat(videosReversed);
+    }
+    deleteImageFiles(ffmpeg, videoFrames.length);
   }
+
   let resultVideo = await concatAllVideos(ffmpeg, videos);
 
   return resultVideo;

@@ -10,7 +10,6 @@ import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
   createPanVideo,
-  
   createZoomVideo,
   getPanValues,
   getZoomValues,
@@ -326,6 +325,12 @@ function loadImage(file) {
 }
 
 function updateCanvasSize() {
+  //TODO: en general lo que se hace acá es adaptar la imagen al canvas. En principio está hecho para que adapte por altura. Lo cual no contempla que el canvas se horizontal y la imagen vertical por ejemplo. Habría que ver las distintas combinaciones.
+  //? Lo cual implica ver también que pasa si hay que hacer upscale o downscale de la imagen según el tamaño del canvas elegido
+  //? y ver también que pasa con los casos en los que no se puede aplicar efectos, por ejemplo PAN en una imagen de iguales proporciones que el canvas
+  //* ver también que acá se modifica IMG, pero después en las funciones de creacion de frames se vuelve a modificar o se lo utiliza. Tal vez debería usar una copia y en las funciones usar la original y recalcular adaptaciones.
+  //* tal vez tener por separado un canvas para preview y otro para cuando se hace la creación del video.
+
   // the canvas height and width must be an even number, if not, it will fail when creating the video
   let divideBy = parseInt(inputDivideBy.value);
   let newCanvasHeight = Math.floor(
@@ -348,6 +353,7 @@ function updateCanvasSize() {
   //adapta la imagen al canvas considerando encajar la altura
   //por lo que en una imagen vertical que sea 2 x 3, si el canvas es 9x16, la imagen se va a ver con un crop en los costados
   //TODO: también habría que ver si hay que poner una opción para cambiar esto, y ver también si afecta a los efectos como el de zoom que puede tener fit por ancho o por alto
+  //TODO: ojo con estas modificaciones de tamaño porque después tal vez se necesite saber o usar la imagen en su resolución original, tal vez tendría que hacer una copia de la original
   let oldHeight = img.height;
   let oldWidth = img.width;
   img.height = canvas.height;
