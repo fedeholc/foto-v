@@ -354,19 +354,24 @@ function updateCanvasSize() {
   //por lo que en una imagen vertical que sea 2 x 3, si el canvas es 9x16, la imagen se va a ver con un crop en los costados
   //TODO: también habría que ver si hay que poner una opción para cambiar esto, y ver también si afecta a los efectos como el de zoom que puede tener fit por ancho o por alto
   //TODO: ojo con estas modificaciones de tamaño porque después tal vez se necesite saber o usar la imagen en su resolución original, tal vez tendría que hacer una copia de la original
-  let oldHeight = img.height;
-  let oldWidth = img.width;
-  img.height = canvas.height;
-  img.width = oldWidth * (canvas.height / oldHeight);
+
+  let newImageHeight = canvas.height;
+  let newImageWidth = img.width * (canvas.height / img.height);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   //TODO: según el efecto podría cambiar el preview... si desde la izquierda o centrado. También se podría hacer un preview del primer frame y otro del último.
   //FIXME: ojo, si la imagen es vertical y el canvas es horizontal no se está haciendo el crop
   //imagen desde la izquierda
-  //ctx.drawImage(img, 0, 0, img.width, img.height);
+  //ctx.drawImage(img, 0, 0, newImageWidth, newImageHeight);
 
   //imagen centrada
-  ctx.drawImage(img, (canvas.width - img.width) / 2, 0, img.width, img.height);
+  ctx.drawImage(
+    img,
+    (canvas.width - newImageWidth) / 2,
+    0,
+    newImageWidth,
+    newImageHeight
+  );
 }
 
 function handleDownloadVideo() {
