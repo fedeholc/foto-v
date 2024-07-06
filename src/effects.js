@@ -2,6 +2,31 @@ import eventBus from "./eventBus.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import { execCreateVideo, concatAllVideos } from "./video.js";
 import { CONFIG } from "./config.js";
+
+/**
+ * @param {number} from
+ * @param {number} to
+ */
+function createFileList(from, to) {
+  let blobfiles = "";
+
+  if (from <= to) {
+    for (let i = from; i <= to; i++) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    return new Blob([blobfiles], {
+      type: "text/plain",
+    });
+  } else if (from > to) {
+    for (let i = from; i >= to; i--) {
+      blobfiles += `file 'input${i}.png'\n`;
+    }
+    return new Blob([blobfiles], {
+      type: "text/plain",
+    });
+  }
+}
+
 /**
  * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
  * @param {HTMLCanvasElement} canvas
@@ -33,8 +58,7 @@ export async function createZoomVideo(
   let videosZoomInReversed = [];
   let videosZoomInForward = [];
 
-  //TODO: En pan, crea los frames iguales para el forward como para el reverse y los invierte. En nuestro caso no se podría, habría que crearlos por separado.
-
+  //TODO: poner el if dentro del for para unifcar con ZI
   if (direction === "ZO" || direction === "ZOZI") {
     for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
       let videoFrames = await createFramesZoomOutByChunks(
@@ -49,29 +73,14 @@ export async function createZoomVideo(
 
       await writeImageFiles(ffmpeg, videoFrames);
 
-      let blobfiles = "";
-      for (let i = 1; i <= videoFrames.length; i++) {
-        blobfiles += `file 'input${i}.png'\n`;
-      }
-      console.log(blobfiles);
-      const blobFileList = new Blob([blobfiles], {
-        type: "text/plain",
-      });
-
-      await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-      let blobfilesReverted = "";
-      for (let i = videoFrames.length; i > 0; i--) {
-        blobfilesReverted += `file 'input${i}.png'\n`;
-      }
-      console.log(blobfilesReverted);
-      const blobFileListReverted = new Blob([blobfilesReverted], {
-        type: "text/plain",
-      });
+      await ffmpeg.writeFile(
+        "imagesfilelist.txt",
+        createFileList(1, videoFrames.length)
+      );
 
       await ffmpeg.writeFile(
         "imagesfilelist-reverted.txt",
-        blobFileListReverted
+        createFileList(videoFrames.length, 1)
       );
 
       if (direction === "ZO" || direction === "ZOZI") {
@@ -109,29 +118,14 @@ export async function createZoomVideo(
 
       await writeImageFiles(ffmpeg, videoFrames);
 
-      let blobfiles = "";
-      for (let i = 1; i <= videoFrames.length; i++) {
-        blobfiles += `file 'input${i}.png'\n`;
-      }
-      console.log(blobfiles);
-      const blobFileList = new Blob([blobfiles], {
-        type: "text/plain",
-      });
-
-      await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-      let blobfilesReverted = "";
-      for (let i = videoFrames.length; i > 0; i--) {
-        blobfilesReverted += `file 'input${i}.png'\n`;
-      }
-      console.log(blobfilesReverted);
-      const blobFileListReverted = new Blob([blobfilesReverted], {
-        type: "text/plain",
-      });
+      await ffmpeg.writeFile(
+        "imagesfilelist.txt",
+        createFileList(1, videoFrames.length)
+      );
 
       await ffmpeg.writeFile(
         "imagesfilelist-reverted.txt",
-        blobFileListReverted
+        createFileList(videoFrames.length, 1)
       );
 
       if (direction === "ZI" || direction === "ZIZO") {
@@ -290,27 +284,15 @@ export async function createPanVideo(
 
     await writeImageFiles(ffmpeg, videoFrames);
 
-    let blobfiles = "";
-    for (let i = 1; i <= videoFrames.length; i++) {
-      blobfiles += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfiles);
-    const blobFileList = new Blob([blobfiles], {
-      type: "text/plain",
-    });
+    await ffmpeg.writeFile(
+      "imagesfilelist.txt",
+      createFileList(1, videoFrames.length)
+    );
 
-    await ffmpeg.writeFile("imagesfilelist.txt", blobFileList);
-
-    let blobfilesReverted = "";
-    for (let i = videoFrames.length; i > 0; i--) {
-      blobfilesReverted += `file 'input${i}.png'\n`;
-    }
-    console.log(blobfilesReverted);
-    const blobFileListReverted = new Blob([blobfilesReverted], {
-      type: "text/plain",
-    });
-
-    await ffmpeg.writeFile("imagesfilelist-reverted.txt", blobFileListReverted);
+    await ffmpeg.writeFile(
+      "imagesfilelist-reverted.txt",
+      createFileList(videoFrames.length, 1)
+    );
 
     if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
       videosForward.push(
