@@ -14,7 +14,7 @@ import {
 } from "./effects.js";
 import eventBus from "./eventBus.js";
 
-import { OutputVideo } from "./config.js";
+import { OutputVideo } from "./OutputVideo.js";
 
 //
 //* DOM elements and event listeners
@@ -192,7 +192,7 @@ function renderStartUI() {
 }
 
 function handleSelectSizePresets() {
-  let selectedLabel = selectSizePresets.selectedOptions[0].label;
+  /*  let selectedLabel = selectSizePresets.selectedOptions[0].label;
   let selectedValue = selectSizePresets.selectedOptions[0].value;
 
   if (selectedValue === "custom") {
@@ -202,7 +202,8 @@ function handleSelectSizePresets() {
   let x = selectedLabel.split("(")[1].split("x")[0].trim();
   let y = selectedLabel.split("x")[1].split(")")[0].trim();
   inputCanvasHeight.value = y;
-  inputCanvasWidth.value = x;
+  inputCanvasWidth.value = x; */
+  outVideo.preset = selectSizePresets.selectedOptions[0].value;
   updateCanvasPreview();
 }
 
