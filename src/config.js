@@ -8,7 +8,6 @@ export const FIT = {
   WIDTH: "FIT_WIDTH",
 };
 
- 
 /* export const outVideo = {
   frameRate: 30,
   sizePreset: null,
@@ -69,7 +68,6 @@ export class OutputVideo {
       throw new Error("El ancho debe ser un número");
     }
 
-    console.log("set width", newWidth);
     this.#width = newWidth;
     this.actualizarValoresInput();
   }

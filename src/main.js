@@ -1,5 +1,3 @@
-//FIXME si la imagen tiene un número impar de pixeles da error el codec que genera el video. Checkiar si efectivamente es así, y si poniendo que el canvas tenga tamaño par se soluciona
-
 // VER ojo, en lugar de usar 5 paràmetros y hacer que la imagen arranca desde una x negativa para que haga el crop centrado, se podria usar la de 9 parametros y seleccionar desde donde se cropea la imagen
 // ver https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
 
@@ -41,7 +39,7 @@ const inputCanvasWidth = /** @type {HTMLInputElement} */ (
 const inputDivideBy = /** @type {HTMLInputElement} */ (
   document.querySelector("#divide-by")
 );
-inputDivideBy.addEventListener("change", handleInputCanvas);
+inputDivideBy.addEventListener("change", updateCanvasPreview);
 
 const canvas = /** @type {HTMLCanvasElement} */ (
   document.getElementById("mi-canvas")
@@ -100,6 +98,7 @@ const selectZoomFit = /** @type {HTMLSelectElement} */ (
   document.querySelector("#zoom-fit")
 );
 selectZoomFit.addEventListener("change", handleSelectZoomFit);
+
 // Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobalScreenLogger.init(screenLogDiv);
@@ -124,9 +123,8 @@ const outVideo = new OutputVideo(
   "FIT_HEIGHT"
 );
 
+//TODO: poner también para el input height, o no hacerlo de este modo?
 outVideo.domRefs.inputWidth.addEventListener("change", handleInputCanvas);
-
-console.log(outVideo.width);
 
 renderStartUI();
 
@@ -194,16 +192,22 @@ function renderStartUI() {
 }
 
 function handleSelectSizePresets() {
-  let selectedPreset = selectSizePresets.selectedOptions[0].label;
-  console.log(selectedPreset);
-  let x = selectedPreset.split("(")[1].split("x")[0].trim();
-  let y = selectedPreset.split("x")[1].split(")")[0].trim();
+  let selectedLabel = selectSizePresets.selectedOptions[0].label;
+  let selectedValue = selectSizePresets.selectedOptions[0].value;
+
+  if (selectedValue === "custom") {
+    return;
+  }
+
+  let x = selectedLabel.split("(")[1].split("x")[0].trim();
+  let y = selectedLabel.split("x")[1].split(")")[0].trim();
   inputCanvasHeight.value = y;
   inputCanvasWidth.value = x;
-  handleInputCanvas();
+  updateCanvasPreview();
 }
 
 function handleInputCanvas() {
+  selectSizePresets.value = "custom";
   updateCanvasPreview();
 }
 
@@ -216,8 +220,6 @@ async function handleCreateVideo() {
   screenLogContainer.classList.add("screen-log");
   screenLogContainer.classList.remove("hidden");
 
-  // sets the canvas size and the image size acording to the inputs
-  //TODO: ver que hace y documentar
   updateCanvasPreview();
 
   if (panRadio.checked) {
