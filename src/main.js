@@ -293,9 +293,10 @@ function handleRestartButton() {
 /**
  * @param {Event} e
  */
-function handleUpload(e) {
+async function handleUpload(e) {
   const input = /** @type {HTMLInputElement} */ (e.target);
-  loadImage(input.files[0]);
+  await loadImage(input.files[0]);
+  updateCanvasPreview();
   renderNewImageUI();
 }
 
@@ -312,31 +313,32 @@ function renderNewImageUI() {
   canvasContainer.classList.add("canvas-container");
 }
 
-//TODO: separar la carga de la imagen de como la muestra en el canvas?
 /**
  * @param {File} file
  */
-function loadImage(file) {
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    img.onload = function () {
-      updateCanvasPreview();
-      
-    };
+async function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      img.onload = () => resolve();
+      img.onerror = () => reject();
 
-    if (typeof event.target.result === "string") {
-      img.src = event.target.result;
-      uploadedImage.setAttribute("src", event.target.result);
-      uploadedImageContainer.querySelector("#uploaded-image-info").innerHTML = `
+      if (typeof event.target.result === "string") {
+        img.src = event.target.result;
+        uploadedImage.setAttribute("src", event.target.result);
+        uploadedImageContainer.querySelector(
+          "#uploaded-image-info"
+        ).innerHTML = `
       <strong>${file.name}</strong><BR>
       ${Math.round(file.size / 1000)}kb | ${img.width} x ${img.height} 
       `;
-    } else {
-      console.error("No se pudo cargar la imagen");
-      //TODO: ver cómo hice la carga de archivo y manejo de errores en fotoyop
-    }
-  };
-  reader.readAsDataURL(file);
+      } else {
+        console.error("No se pudo cargar la imagen");
+        reject();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function updateCanvasPreview() {
@@ -419,7 +421,7 @@ function handleDragLeave() {
 /**
  * @param {DragEvent} e
  */
-function handleDrop(e) {
+async function handleDrop(e) {
   e.preventDefault();
   handleDragLeave();
   const files = [];
@@ -435,7 +437,7 @@ function handleDrop(e) {
     }
   }
   if (files.length > 0) {
-    loadImage(files[0]);
+    await loadImage(files[0]);
     renderNewImageUI();
   }
 }
