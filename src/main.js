@@ -116,15 +116,15 @@ let videoToDownload;
 eventBus.subscribe("log", miLog);
 
 const outVideo = new OutputVideo(
-  500,
-  500,
+  OutputVideo.sizePreset.ratio916,
+  selectSizePresets,
   inputCanvasWidth,
   inputCanvasHeight,
   "FIT_HEIGHT"
 );
 
 //TODO: poner también para el input height, o no hacerlo de este modo?
-outVideo.domRefs.inputWidth.addEventListener("change", handleInputCanvas);
+outVideo.domRefs.width.addEventListener("change", handleInputCanvas);
 
 renderStartUI();
 
