@@ -4,6 +4,9 @@ export const FIT = {
   WIDTH: "FIT_WIDTH",
 };
 
+/**
+ * @class OutputVideo - Represents the output video settings. Contains references to the DOM input elements.
+ */
 export class OutputVideo {
   //TODO: debería poner aca también frameRate?
 
@@ -12,12 +15,14 @@ export class OutputVideo {
   /**@type {number} */
   #height = 0;
 
+  /**@type {{width: HTMLInputElement, height: HTMLInputElement, preset: HTMLSelectElement}} */
   #domRefs = {
     width: null,
     height: null,
     preset: null,
   };
 
+  /**@type {"FIT_HEIGHT" | "FIT_WIDTH"} */
   #fit;
 
   /**@type {sizePreset} */
@@ -35,6 +40,7 @@ export class OutputVideo {
     custom: "custom",
   };
 
+  /**@type {Map<sizePreset, {width: number, height: number}>} */
   static #presetsMap = new Map([
     ["ratio916", { width: 1080, height: 1920 }],
     ["ratio23", { width: 1080, height: 1620 }],
@@ -117,7 +123,7 @@ export class OutputVideo {
   }
 
   updateValuesInRefs() {
-    this.#domRefs.width.value = this.#width;
-    this.#domRefs.height.value = this.#height;
+    this.#domRefs.width.value = this.#width.toString();
+    this.#domRefs.height.value = this.#height.toString();
   }
 }
