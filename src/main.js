@@ -299,6 +299,8 @@ function handleRestartButton() {
 async function handleUpload(e) {
   const input = /** @type {HTMLInputElement} */ (e.target);
   await loadImage(input.files[0]);
+  setImageInfo(img, input.files[0]);
+
   updateCanvasPreview();
   renderNewImageUI();
 }
@@ -328,13 +330,13 @@ async function loadImage(file) {
 
       if (typeof event.target.result === "string") {
         img.src = event.target.result;
-        uploadedImage.setAttribute("src", event.target.result);
+        /* uploadedImage.setAttribute("src", event.target.result);
         uploadedImageContainer.querySelector(
           "#uploaded-image-info"
         ).innerHTML = `
       <strong>${file.name}</strong><BR>
       ${Math.round(file.size / 1000)}kb | ${img.width} x ${img.height} 
-      `;
+      `; */
       } else {
         console.error("No se pudo cargar la imagen");
         reject();
@@ -441,10 +443,24 @@ async function handleDrop(e) {
   }
   if (files.length > 0) {
     await loadImage(files[0]);
+    setImageInfo(img, files[0]);
+    updateCanvasPreview();
+
     renderNewImageUI();
   }
 }
 
+/**
+ * @param {HTMLImageElement} img
+ * @param {File} file
+ */
+function setImageInfo(img, file) {
+  uploadedImage.setAttribute("src", img.src);
+  uploadedImageContainer.querySelector("#uploaded-image-info").innerHTML = `
+      <strong>${file.name}</strong><BR>
+      ${Math.round(file.size / 1000)}kb | ${img.width} x ${img.height} 
+      `;
+}
 /**
  * @param {{ buffer: BlobPart; }} video
  */
