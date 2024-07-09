@@ -368,10 +368,14 @@ function updateCanvasPreview() {
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  let newImageHeight = 0;
+  let newImageWidth = 0;
+
   //A modo de preview, adapto la imagen al canvas según el tipo de FIT
   if (outVideo.fit === "FIT_HEIGHT") {
-    let newImageHeight = canvas.height;
-    let newImageWidth = img.width * (canvas.height / img.height);
+    newImageHeight = canvas.height;
+    newImageWidth = img.width * (canvas.height / img.height);
+
     ctx.drawImage(
       img,
       (canvas.width - newImageWidth) / 2,
@@ -381,8 +385,8 @@ function updateCanvasPreview() {
     );
   }
   if (outVideo.fit === "FIT_WIDTH") {
-    let newImageWidth = canvas.width;
-    let newImageHeight = img.height * (canvas.width / img.width);
+    newImageWidth = canvas.width;
+    newImageHeight = img.height * (canvas.width / img.width);
     ctx.drawImage(
       img,
       0,
@@ -391,6 +395,10 @@ function updateCanvasPreview() {
       newImageHeight
     );
   }
+  //TODO: ojo, hay que hacer esto porque luego las funciones que crean los frames toman el tamaño de la imagen para dibujar en el canvas. Hay que pasar el calculo a una función aparte y ponerlo dentro de la función que crea los frames
+  img.width = newImageWidth;
+  img.height = newImageHeight;
+
   //las imagenes del preview las estoy poniendo centradas, también podrían mostrarse desde la izquierda (punto de partida del pan), con:
   //ctx.drawImage(img, 0, 0, newImageWidth, newImageHeight);
   //o mejor aún tener un preview que muestre primer y ultimo frame de como quedaría el video
