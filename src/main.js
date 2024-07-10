@@ -22,25 +22,6 @@ import { OutputVideo } from "./OutputVideo.js";
 const screenLogDiv =
   /** @type {HTMLDivElement} */ document.getElementById("screen-log");
 
-/** @type {HTMLSelectElement} */
-const selectSizePresets = document.querySelector("#size-presets");
-selectSizePresets.addEventListener("change", handleSelectSizePresets);
-
-const inputCanvasHeight = /** @type {HTMLInputElement} */ (
-  document.querySelector("#canvas-height")
-);
-inputCanvasHeight.addEventListener("change", handleInputCanvas);
-
-const inputCanvasWidth = /** @type {HTMLInputElement} */ (
-  document.querySelector("#canvas-width")
-);
-//inputCanvasWidth.addEventListener("change", handleInputCanvas);
-
-const inputDivideBy = /** @type {HTMLInputElement} */ (
-  document.querySelector("#divide-by")
-);
-inputDivideBy.addEventListener("change", updateCanvasPreview);
-
 const canvas = /** @type {HTMLCanvasElement} */ (
   document.getElementById("mi-canvas")
 );
@@ -116,15 +97,19 @@ let videoToDownload;
 eventBus.subscribe("log", miLog);
 
 const outVideo = new OutputVideo(
-  OutputVideo.sizePreset.ratio916,
-  selectSizePresets,
-  inputCanvasWidth,
-  inputCanvasHeight,
+  document.querySelector("#size-presets"),
+  document.querySelector("#canvas-width"),
+  document.querySelector("#canvas-height"),
+  document.querySelector("#dscale"),
+  img,
   "FIT_HEIGHT"
 );
-
-//TODO: poner también para el input height, o no hacerlo de este modo?
-outVideo.domRefs.width.addEventListener("change", handleInputCanvas);
+outVideo.preset = OutputVideo.sizePreset.ratio916;
+outVideo.dScaleFactor = 2;
+outVideo.domRefs.width.addEventListener("change", handleChangeCanvasSize);
+outVideo.domRefs.height.addEventListener("change", handleChangeCanvasSize);
+outVideo.domRefs.dScaleFactor.addEventListener("change", handleChangeDScale);
+outVideo.domRefs.preset.addEventListener("change", handleChangePreset);
 
 renderStartUI();
 
@@ -191,24 +176,21 @@ function renderStartUI() {
   // VER conviene reestablecer los valores por defecto de los inputs?
 }
 
-function handleSelectSizePresets() {
-  /*  let selectedLabel = selectSizePresets.selectedOptions[0].label;
-  let selectedValue = selectSizePresets.selectedOptions[0].value;
-
-  if (selectedValue === "custom") {
-    return;
-  }
-
-  let x = selectedLabel.split("(")[1].split("x")[0].trim();
-  let y = selectedLabel.split("x")[1].split(")")[0].trim();
-  inputCanvasHeight.value = y;
-  inputCanvasWidth.value = x; */
-  outVideo.preset = selectSizePresets.selectedOptions[0].value;
+function handleChangePreset() {
+  outVideo.preset = outVideo.domRefs.preset.selectedOptions[0].value;
   updateCanvasPreview();
 }
 
-function handleInputCanvas() {
-  selectSizePresets.value = "custom";
+function handleChangeDScale() {
+  outVideo.dScaleFactor = parseInt(outVideo.domRefs.dScaleFactor.value);
+  updateCanvasPreview();
+}
+function handleChangeCanvasSize() {
+  outVideo.preset = "custom";
+  outVideo.canvasHeight = parseInt(outVideo.domRefs.height.value);
+  outVideo.canvasWidth = parseInt(outVideo.domRefs.width.value);
+  outVideo.dScaleFactor = parseInt(outVideo.domRefs.dScaleFactor.value);
+
   updateCanvasPreview();
 }
 
@@ -225,6 +207,12 @@ async function handleCreateVideo() {
 
   if (panRadio.checked) {
     let panOptions = getPanValues();
+
+    //VER OJO, la creación de frames para Pan toma el valor de img.width y img.height para dibujar en el canvas, por eso hay que setearlo adaptado (al fit y al downscale) acá. Otra opción sería pasar el valor a la función.
+    // Zoom lo hace distinto (en base al valor del canvas)
+
+    img.width = outVideo.drawWidth;
+    img.height = outVideo.drawHeight;
     videoToDownload = await createPanVideo(
       ffmpeg,
       canvas,
@@ -325,18 +313,14 @@ async function loadImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function (event) {
-      img.onload = () => resolve();
+      img.onload = () => {
+        outVideo.imgSize = { width: img.width, height: img.height };
+        resolve();
+      };
       img.onerror = () => reject();
 
       if (typeof event.target.result === "string") {
         img.src = event.target.result;
-        /* uploadedImage.setAttribute("src", event.target.result);
-        uploadedImageContainer.querySelector(
-          "#uploaded-image-info"
-        ).innerHTML = `
-      <strong>${file.name}</strong><BR>
-      ${Math.round(file.size / 1000)}kb | ${img.width} x ${img.height} 
-      `; */
       } else {
         console.error("No se pudo cargar la imagen");
         reject();
@@ -346,58 +330,39 @@ async function loadImage(file) {
   });
 }
 
+function updateFinalResolutionInfo() {
+  finalResolutionInfo.textContent = `${outVideo.dScaledCanvasWidth} x ${outVideo.dScaledCanvasHeight}`;
+}
+
 function updateCanvasPreview() {
-  //Adapto el tamaño del canvas a las preferencias del usuario
-  // the canvas height and width must be an even number, if not, it will fail when creating the video
-  let divideBy = parseInt(inputDivideBy.value);
-  let newCanvasHeight = Math.floor(
-    parseInt(inputCanvasHeight.value) / divideBy
-  );
-  let newCanvasWidth = Math.floor(parseInt(inputCanvasWidth.value) / divideBy);
-  if (newCanvasHeight % 2 !== 0) newCanvasHeight++;
-  if (newCanvasWidth % 2 !== 0) newCanvasWidth++;
+  canvas.width = outVideo.dScaledCanvasWidth;
+  canvas.height = outVideo.dScaledCanvasHeight;
 
-  canvas.height = newCanvasHeight;
-  canvas.width = newCanvasWidth;
-
-  finalResolutionInfo.textContent = `${canvas.width || 0} x ${
-    canvas.height || 0
-  }`;
+  updateFinalResolutionInfo();
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  let newImageHeight = 0;
-  let newImageWidth = 0;
-
   //A modo de preview, adapto la imagen al canvas según el tipo de FIT
   if (outVideo.fit === "FIT_HEIGHT") {
-    newImageHeight = canvas.height;
-    newImageWidth = img.width * (canvas.height / img.height);
-
     ctx.drawImage(
       img,
-      (canvas.width - newImageWidth) / 2,
+      (canvas.width - outVideo.drawWidth) / 2,
       0,
-      newImageWidth,
-      newImageHeight
+      outVideo.drawWidth,
+      outVideo.drawHeight
     );
   }
   if (outVideo.fit === "FIT_WIDTH") {
-    newImageWidth = canvas.width;
-    newImageHeight = img.height * (canvas.width / img.width);
     ctx.drawImage(
       img,
       0,
-      (canvas.height - newImageHeight) / 2,
-      newImageWidth,
-      newImageHeight
+      (canvas.height - outVideo.drawHeight) / 2,
+      outVideo.drawWidth,
+      outVideo.drawHeight
     );
   }
-  //TODO: ojo, hay que hacer esto porque luego las funciones que crean los frames toman el tamaño de la imagen para dibujar en el canvas. Hay que pasar el calculo a una función aparte y ponerlo dentro de la función que crea los frames
-  img.width = newImageWidth;
-  img.height = newImageHeight;
 
   //las imagenes del preview las estoy poniendo centradas, también podrían mostrarse desde la izquierda (punto de partida del pan), con:
   //ctx.drawImage(img, 0, 0, newImageWidth, newImageHeight);

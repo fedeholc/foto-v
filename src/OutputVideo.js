@@ -10,23 +10,16 @@ export const FIT = {
 export class OutputVideo {
   //TODO: debería poner aca también frameRate?
 
-  /**@type {number} */
-  #width = 0;
-  /**@type {number} */
-  #height = 0;
-
-  /**@type {{width: HTMLInputElement, height: HTMLInputElement, preset: HTMLSelectElement}} */
+  /**@type {{width: HTMLInputElement, height: HTMLInputElement, preset: HTMLSelectElement, dScaleFactor: HTMLInputElement}} */
   #domRefs = {
     width: null,
     height: null,
     preset: null,
+    dScaleFactor: null,
   };
 
   /**@type {"FIT_HEIGHT" | "FIT_WIDTH"} */
   #fit;
-
-  /**@type {sizePreset} */
-  #preset;
 
   /** @enum {string} */
   static sizePreset = {
@@ -52,22 +45,94 @@ export class OutputVideo {
     ["custom", { width: 0, height: 0 }],
   ]);
 
+  /**@type {sizePreset} */
+  #preset = OutputVideo.sizePreset.custom;
+
+  #canvasWidth = 0;
+  #canvasHeight = 0;
+  #dScaleFactor = 0;
+
+  #imgSize = null;
   /**
-   * @param {sizePreset} preset
-   * @param {HTMLInputElement} widthDOMRef
-   * @param {HTMLInputElement} heightDOMRef
+   * @param {HTMLSelectElement} refPreset
+   * @param {HTMLInputElement} refCanvasWidth
+   * @param {HTMLInputElement} refCanvasHeight
    * @param {"FIT_HEIGHT" | "FIT_WIDTH"} fit
-   * @param {HTMLSelectElement} presetDOMRef
+   * @param {{width: number, height: number}} imgSize
+   * @param {HTMLInputElement} refDScaleFactor
    */
-  constructor(preset, presetDOMRef, widthDOMRef, heightDOMRef, fit) {
-    this.#domRefs.preset = presetDOMRef;
-    this.#domRefs.width = widthDOMRef;
-    this.#domRefs.height = heightDOMRef;
+  constructor(
+    refPreset,
+    refCanvasWidth,
+    refCanvasHeight,
+    refDScaleFactor,
+    imgSize,
+    fit
+  ) {
+    this.#domRefs.preset = refPreset;
+    this.#domRefs.width = refCanvasWidth;
+    this.#domRefs.height = refCanvasHeight;
     this.#fit = fit;
-    this.preset = preset;
-    this.updateValuesInRefs();
+    this.#imgSize = imgSize;
+    this.#domRefs.dScaleFactor = refDScaleFactor;
   }
 
+  get dScaleFactor() {
+    return this.#dScaleFactor;
+  }
+  set dScaleFactor(newDScaleFactor) {
+    if (isNaN(newDScaleFactor)) {
+      throw new Error("Downscale Factor must be a number");
+    }
+    this.#dScaleFactor = newDScaleFactor;
+    this.#domRefs.dScaleFactor.value = this.#dScaleFactor.toString();
+  }
+  get dScaledCanvasWidth() {
+    // the canvas height and width must be an even number, if not, it will fail when creating the video
+    let dScaledCanvasWidth = Math.floor(this.#canvasWidth / this.#dScaleFactor);
+    if (dScaledCanvasWidth % 2 !== 0) dScaledCanvasWidth++;
+
+    return dScaledCanvasWidth;
+  }
+  get dScaledCanvasHeight() {
+    let dScaledCanvasHeight = Math.floor(
+      this.#canvasHeight / this.#dScaleFactor
+    );
+    if (dScaledCanvasHeight % 2 !== 0) dScaledCanvasHeight++;
+    return dScaledCanvasHeight;
+  }
+
+  /**
+   * @param {{ width: number; height: number; }} newImg
+   */
+  set imgSize(newImg) {
+    this.#imgSize = newImg;
+  }
+  get imgSize() {
+    return this.#imgSize;
+  }
+  get drawWidth() {
+    if (this.#fit === FIT.WIDTH) {
+      return this.dScaledCanvasWidth;
+    } else if (this.#fit === FIT.HEIGHT) {
+      return (
+        this.#imgSize.width * (this.dScaledCanvasHeight / this.#imgSize.height)
+      );
+    } else {
+      throw new Error("Invalid fit value");
+    }
+  }
+  get drawHeight() {
+    if (this.#fit === FIT.HEIGHT) {
+      return this.dScaledCanvasHeight;
+    } else if (this.#fit === FIT.WIDTH) {
+      return (
+        this.#imgSize.height * (this.dScaledCanvasWidth / this.#imgSize.width)
+      );
+    } else {
+      throw new Error("Invalid fit value");
+    }
+  }
   /**
    * @param {string} newPreset
    */
@@ -80,9 +145,10 @@ export class OutputVideo {
     if (newPreset === OutputVideo.sizePreset.custom) {
       return;
     }
-    this.#width = OutputVideo.#presetsMap.get(newPreset).width;
-    this.#height = OutputVideo.#presetsMap.get(newPreset).height;
-    this.updateValuesInRefs();
+    this.#canvasWidth = OutputVideo.#presetsMap.get(newPreset).width;
+    this.#canvasHeight = OutputVideo.#presetsMap.get(newPreset).height;
+    this.#domRefs.width.value = this.#canvasWidth.toString();
+    this.#domRefs.height.value = this.#canvasHeight.toString();
   }
   get preset() {
     return this.#preset;
@@ -94,36 +160,31 @@ export class OutputVideo {
     this.#fit = newFit;
   }
 
-  get width() {
-    return this.#width;
+  get canvasWidth() {
+    return this.#canvasWidth;
   }
 
-  set width(newWidth) {
+  set canvasWidth(newWidth) {
     if (isNaN(newWidth)) {
       throw new Error("Width must be a number");
     }
-    this.#width = newWidth;
-    this.updateValuesInRefs();
+    this.#canvasWidth = newWidth;
+    this.#domRefs.width.value = this.#canvasWidth.toString();
   }
 
-  get height() {
-    return this.#height;
+  set canvasHeight(newHeight) {
+    if (isNaN(newHeight)) {
+      throw new Error("Height must be a number");
+    }
+    this.#canvasHeight = newHeight;
+    this.#domRefs.height.value = this.#canvasHeight.toString();
+  }
+
+  get canvasHeight() {
+    return this.#canvasHeight;
   }
 
   get domRefs() {
     return this.#domRefs;
-  }
-
-  set height(newHeight) {
-    if (isNaN(newHeight)) {
-      throw new Error("Height must be a number");
-    }
-    this.#height = newHeight;
-    this.updateValuesInRefs();
-  }
-
-  updateValuesInRefs() {
-    this.#domRefs.width.value = this.#width.toString();
-    this.#domRefs.height.value = this.#height.toString();
   }
 }
