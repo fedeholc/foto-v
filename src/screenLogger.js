@@ -28,7 +28,7 @@ export class ScreenLogger {
    */
   constructor(element) {
     if (!element || !(element instanceof HTMLElement)) {
-      throw new Error("Debes pasar un elemento HTML válido.");
+      throw new Error("You must pass a valid HTMLElement as argument.");
     }
     this.element = element;
   }
@@ -39,7 +39,9 @@ export class ScreenLogger {
   log(messages) {
     this.element.innerHTML = `<div class="screen-log-title">${
       messages[0]
-    }</div> <div class="screen-log-message">${getTimeForLog()} >>  ${messages[1]}</div>`;
+    }</div> <div class="screen-log-message">${getTimeForLog()} >> ${
+      messages[1]
+    }</div>`;
   }
 }
 
@@ -58,7 +60,7 @@ export const GlobalScreenLogger = (function () {
         screenLoggerInstance.log(messages);
       } else {
         console.error(
-          "ScreenLogger no ha sido inicializado. Llama a ScreenLogger.init(element) primero."
+          "ScreenLogger is not initialized. Call ScreenLogger.init(element) first."
         );
       }
     },
