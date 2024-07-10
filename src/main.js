@@ -76,6 +76,7 @@ selectZoomFit.addEventListener("change", handleSelectZoomFit);
 //_ Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobalScreenLogger.init(screenLogDiv);
+eventBus.subscribe("log", GlobalScreenLogger.log);
 eventBus.publish("log", "* * *");
 
 const ctx = canvas.getContext("2d");
@@ -86,8 +87,6 @@ let img = new Image();
 
 /** @typedef {{buffer: BlobPart}} */
 let videoToDownload;
-
-eventBus.subscribe("log", miLog);
 
 const outVideo = new OutputVideo(
   document.querySelector("#size-presets"),
@@ -105,6 +104,22 @@ outVideo.domRefs.dScaleFactor.addEventListener("change", handleChangeDScale);
 outVideo.domRefs.preset.addEventListener("change", handleChangePreset);
 
 renderStartUI();
+//_ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+// dialog que no fue
+/* const dialog = document.querySelector("dialog");
+const showButton = document.querySelector("dialog + button");
+const closeButton = document.querySelector("dialog button");
+
+// "Show the dialog" button opens the dialog modally
+showButton.addEventListener("click", () => {
+  dialog.showModal();
+});
+
+// "Close" button closes the dialog
+closeButton.addEventListener("click", () => {
+  dialog.close();
+}); */
 
 //_ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -120,11 +135,11 @@ function handleSelectZoomFit() {
   updateCanvasPreview();
 }
 /**
- * @param {string} text
+ * @param {string[]} text
  */
 function miLog(text) {
   let now = new Date();
-  GlobalScreenLogger.log(now.toISOString() + " " + text);
+  GlobalScreenLogger.log(["holi", now.toISOString() + " " + text]);
   console.log(now.toISOString() + " " + text);
 }
 
@@ -198,6 +213,8 @@ async function handleCreateVideo() {
   if (panRadio.checked) {
     let panOptions = getPanValues();
 
+    //TODO: ojo, no está funcionando lo del lastframe repeate, porque lo hace para cada chunk de frames, no para el último frame del video.
+
     //VER OJO, la creación de frames para Pan toma el valor de img.width y img.height para dibujar en el canvas, por eso hay que setearlo adaptado (al fit y al downscale) acá. Otra opción sería pasar el valor a la función.
     // Zoom lo hace distinto (en base al valor del canvas)
 
@@ -228,7 +245,7 @@ async function handleCreateVideo() {
   }
 
   if (videoToDownload) {
-    eventBus.publish("log", `Done!`);
+    eventBus.publish("log", ["¡Your video is ready!", `Done.`]);
     downloadVideoButton.classList.remove("hidden");
   }
 }

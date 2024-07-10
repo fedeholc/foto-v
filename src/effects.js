@@ -189,10 +189,10 @@ async function writeImageFiles(ffmpeg, videoFrames) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       for (let i = 0; i < videoFrames.length; i++) {
-        eventBus.publish(
-          "log",
-          `Writing frame ${i + 1} of ${videoFrames.length + 1}`
-        );
+        eventBus.publish("log", [
+          "Creating video, please wait.",
+          `File ${i + 1} of ${videoFrames.length + 1}`,
+        ]);
         await ffmpeg.writeFile(`input${i + 1}.png`, videoFrames[i]);
       }
       resolve();
@@ -316,7 +316,10 @@ export function createFramesPanByChunks(canvas, img, pixelsShift, posX, toX) {
     requestAnimationFrame(step);
 
     function step() {
-      eventBus.publish("log", `Creating frame ${posX} of ${toX}`);
+      eventBus.publish("log", [
+        "Creating video, please wait.",
+        `Frame ${posX} of ${toX}`,
+      ]);
 
       ctx.drawImage(img, 0 - posX * pixelsShift, 0, img.width, img.height);
       videoFrames.push(canvas.toDataURL("image/png"));

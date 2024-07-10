@@ -34,16 +34,12 @@ export class ScreenLogger {
   }
 
   /**
-   * @param {string} message
+   * @param {string[]} messages
    */
-  log(message) {
-    if (typeof message !== "string") {
-      message = JSON.stringify(message);
-    }
-    const logMessage = document.createElement("div");
-    logMessage.textContent = message;
+  log(messages) {
     //this.element.appendChild(logMessage);
-    this.element.innerHTML = message;
+    this.element.innerHTML =
+      messages[0] + "<br>" + getTimeForLog() + " >> " + messages[1];
   }
 }
 
@@ -57,9 +53,9 @@ export const GlobalScreenLogger = (function () {
       }
       return screenLoggerInstance;
     },
-    log: function (/** @type {any} */ message) {
+    log: function (/** @type {string[]} */ messages) {
       if (screenLoggerInstance) {
-        screenLoggerInstance.log(message);
+        screenLoggerInstance.log(messages);
       } else {
         console.error(
           "ScreenLogger no ha sido inicializado. Llama a ScreenLogger.init(element) primero."
@@ -68,3 +64,11 @@ export const GlobalScreenLogger = (function () {
     },
   };
 })();
+
+function getTimeForLog() {
+  const ahora = new Date();
+  const horas = String(ahora.getHours()).padStart(2, "0");
+  const minutos = String(ahora.getMinutes()).padStart(2, "0");
+  const segundos = String(ahora.getSeconds()).padStart(2, "0");
+  return `${horas}:${minutos}:${segundos}`;
+}

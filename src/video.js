@@ -74,7 +74,10 @@ export async function execCreateVideo(
         reverseParam = "reverse,";
       }
 
-      eventBus.publish("log", `Creating video (it may take a while...)`);
+      eventBus.publish("log", [
+        "Creating video, please wait.",
+        `Rendering (it may take a while...)`,
+      ]);
       // no cambiar el orden de estos parametros porque se rompe
       await ffmpeg.exec([
         "-r",
@@ -111,7 +114,10 @@ export async function execCreateVideo(
 
       //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 
-      eventBus.publish("log", `Writing video file`);
+      eventBus.publish("log", [
+        "Creating video, please wait.",
+        `Writing video file...`,
+      ]);
 
       let rta = ffmpeg.readFile("output.mp4");
 
