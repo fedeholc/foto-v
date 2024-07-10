@@ -1,9 +1,4 @@
-// VER ojo, en lugar de usar 5 paràmetros y hacer que la imagen arranca desde una x negativa para que haga el crop centrado, se podria usar la de 9 parametros y seleccionar desde donde se cropea la imagen
-// ver https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-
-//
-//* imports
-//
+//_imports
 import { GlobalScreenLogger } from "./screenLogger.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
 import {
@@ -16,9 +11,7 @@ import eventBus from "./eventBus.js";
 
 import { OutputVideo } from "./OutputVideo.js";
 
-//
-//* DOM elements and event listeners
-//
+//_DOM elements and event listeners
 const screenLogDiv =
   /** @type {HTMLDivElement} */ document.getElementById("screen-log");
 
@@ -80,7 +73,7 @@ const selectZoomFit = /** @type {HTMLSelectElement} */ (
 );
 selectZoomFit.addEventListener("change", handleSelectZoomFit);
 
-// Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+//_ Main # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobalScreenLogger.init(screenLogDiv);
 eventBus.publish("log", "* * *");
@@ -113,7 +106,7 @@ outVideo.domRefs.preset.addEventListener("change", handleChangePreset);
 
 renderStartUI();
 
-// # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+//_ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 function handleSelectZoomFit() {
   let zoomFit = selectZoomFit.selectedOptions[0].value;
@@ -172,8 +165,6 @@ function renderStartUI() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   canvasContainer.classList.add("hidden");
   canvasContainer.classList.remove("canvas-container");
-
-  // VER conviene reestablecer los valores por defecto de los inputs?
 }
 
 function handleChangePreset() {
@@ -185,12 +176,12 @@ function handleChangeDScale() {
   outVideo.dScaleFactor = parseInt(outVideo.domRefs.dScaleFactor.value);
   updateCanvasPreview();
 }
+
 function handleChangeCanvasSize() {
   outVideo.preset = "custom";
   outVideo.canvasHeight = parseInt(outVideo.domRefs.height.value);
   outVideo.canvasWidth = parseInt(outVideo.domRefs.width.value);
   outVideo.dScaleFactor = parseInt(outVideo.domRefs.dScaleFactor.value);
-
   updateCanvasPreview();
 }
 
@@ -198,7 +189,6 @@ async function handleCreateVideo() {
   if (img.src === "") {
     return;
   }
-
   createVideoButton.classList.add("hidden");
   screenLogContainer.classList.add("screen-log");
   screenLogContainer.classList.remove("hidden");
