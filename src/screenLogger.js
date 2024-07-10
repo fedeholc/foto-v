@@ -38,8 +38,9 @@ export class ScreenLogger {
    */
   log(messages) {
     //this.element.appendChild(logMessage);
-    this.element.innerHTML =
-      messages[0] + "<br>" + getTimeForLog() + " >> " + messages[1];
+    this.element.innerHTML = `<div class="screen-log-title">${
+      messages[0]
+    }</div> <div class="screen-log-message">${getTimeForLog()} >>  ${messages[1]}</div>`;
   }
 }
 

@@ -382,14 +382,24 @@ details[open] summary {
 
 .screen-log {
   width: 100%;
-  height: 100px;
+
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   background-color: var(--color1b);
   color: var(--color19);
   padding: 1rem;
+  gap: 1rem;
   border: 2px dashed var(--color19);
+}
+
+.screen-log>.screen-log-message {
+  font-size: 0.9rem;
+  opacity: 80%;
+}
+
+.screen-log>.screen-log-title {
+  font-size: 1rem;
 }
 
 #effects-section {

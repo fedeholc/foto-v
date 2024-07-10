@@ -42,7 +42,7 @@ dropContainer.addEventListener("dragleave", handleDragLeave);
 const createVideoButton = document.querySelector("#create-video-button");
 createVideoButton.addEventListener("click", handleCreateVideo);
 
-const effecstDetails = document.querySelector("#effects-details");
+const effectsDetails = document.querySelector("#effects-details");
 
 const panContainer = document.querySelector("#pan-radio-container");
 const panLabel = document.querySelector("#pan-label");
@@ -134,18 +134,8 @@ function handleSelectZoomFit() {
   }
   updateCanvasPreview();
 }
-/**
- * @param {string[]} text
- */
-function miLog(text) {
-  let now = new Date();
-  GlobalScreenLogger.log(["holi", now.toISOString() + " " + text]);
-  console.log(now.toISOString() + " " + text);
-}
 
 function renderStartUI() {
-  eventBus.publish("log", "initUI");
-
   uploadedImage.setAttribute("src", "");
   uploadedImageContainer.classList.add("hidden");
   uploadedImageContainer.classList.remove("uploaded-image-container");
@@ -169,7 +159,7 @@ function renderStartUI() {
   zoomOutSection.classList.add("hidden");
   outputSection.querySelector("details").removeAttribute("open");
 
-  effecstDetails.removeAttribute("open");
+  effectsDetails.removeAttribute("open");
 
   downloadVideoButton.classList.add("hidden");
 
@@ -202,8 +192,25 @@ function handleChangeCanvasSize() {
 
 async function handleCreateVideo() {
   if (img.src === "") {
+    screenLogContainer.classList.remove("hidden");
+    screenLogContainer.classList.add("screen-log");
+    eventBus.publish("log", [
+      "Please upload an image.",
+      "No image to process!",
+    ]);
     return;
   }
+
+  if (!panRadio.checked && !zoomOutRadio.checked) {
+    screenLogContainer.classList.remove("hidden");
+    screenLogContainer.classList.add("screen-log");
+    eventBus.publish("log", [
+      "Please select an effect to continue.",
+      "No effect selected!",
+    ]);
+    return;
+  }
+
   createVideoButton.classList.add("hidden");
   screenLogContainer.classList.add("screen-log");
   screenLogContainer.classList.remove("hidden");
@@ -262,6 +269,13 @@ function handleRadioPan() {
   zoomOutContainer.classList.remove("container-selected");
 
   outputSection.querySelector("details").setAttribute("open", "");
+
+  screenLogContainer.classList.add("hidden");
+  screenLogContainer.classList.remove("screen-log");
+
+  //mientras no haya pan vertical
+  //porque sino puede quedar seteado el fit width de zoom
+  outVideo.fit = "FIT_HEIGHT";
 }
 
 function handleRadioZoomOut() {
@@ -276,6 +290,9 @@ function handleRadioZoomOut() {
   panSection.classList.add("hidden");
   panLabel.classList.remove("label-selected");
   panContainer.classList.remove("container-selected");
+
+  screenLogContainer.classList.add("hidden");
+  screenLogContainer.classList.remove("screen-log");
 }
 
 function handleUploadFormClick() {
@@ -301,13 +318,15 @@ async function handleUpload(e) {
 }
 
 function renderNewImageUI() {
+  screenLogContainer.classList.add("hidden");
+  screenLogContainer.classList.remove("screen-log");
   formUpload.classList.add("hidden");
   restartContainer.classList.remove("hidden");
   restartContainer.classList.add("restart-container");
   uploadedImageContainer.classList.remove("hidden");
   uploadedImageContainer.classList.add("uploaded-image-container");
 
-  effecstDetails.setAttribute("open", "");
+  effectsDetails.setAttribute("open", "");
 
   canvasContainer.classList.remove("hidden");
   canvasContainer.classList.add("canvas-container");
