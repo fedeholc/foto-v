@@ -54,6 +54,8 @@ export async function createZoomVideo(
   let videosReversed = [];
   let videosForward = [];
 
+  //TODO: acá (y en la funciòn de create pan) tengo que corregir lo de lastframe repeat, o bien checkiar si es el ultimo chunk (ultimo paso del for) y ahi hacer que repita, o sino quitarlo del función y hacer otra nueva que dado un frame genere un vid de x tiempo para juntarlo...
+
   for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = [];
     if (direction === "ZO" || direction === "ZOZI") {
