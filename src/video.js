@@ -58,11 +58,7 @@ export async function concatAllVideos(ffmpeg, videos) {
  * @param {boolean} reverse - Reverse the video or not
  * @returns {Promise<{ buffer: BlobPart; }>} - Video
  */
-export async function execCreateVideo(
-  ffmpeg,
-  frameRate,
-  reverse
-) {
+export async function execCreateVideo(ffmpeg, frameRate, reverse) {
   return new Promise((resolve, reject) => {
     ffmpeg.whenReady(async () => {
       let reverseParam = "";
@@ -86,8 +82,6 @@ export async function execCreateVideo(
         "0",
         "-i",
         filename,
-        //"-vf",
-        //`tpad=stop_mode=clone:stop_duration=${lastFrameRepeat}`,
         "-c:v",
         "libx264",
         "-pix_fmt",
@@ -109,8 +103,6 @@ export async function execCreateVideo(
         "yuv420p",
         "output.mp4",
       ]); */
-
-      //TODO: puedo hacer que la duración del último frame sea de menos de un segúndo?
 
       eventBus.publish("log", [
         "Creating video, please wait.",
