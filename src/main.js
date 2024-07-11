@@ -220,8 +220,6 @@ async function handleCreateVideo() {
   if (panRadio.checked) {
     let panOptions = getPanValues();
 
-    //TODO: ojo, no está funcionando lo del lastframe repeate, porque lo hace para cada chunk de frames, no para el último frame del video.
-
     //VER OJO, la creación de frames para Pan toma el valor de img.width y img.height para dibujar en el canvas, por eso hay que setearlo adaptado (al fit y al downscale) acá. Otra opción sería pasar el valor a la función.
     // Zoom lo hace distinto (en base al valor del canvas)
 
@@ -252,7 +250,7 @@ async function handleCreateVideo() {
   }
 
   if (videoToDownload) {
-    eventBus.publish("log", ["¡Your video is ready!", `Done.`]);
+    eventBus.publish("log", ["Your video is ready!", `Done.`]);
     downloadVideoButton.classList.remove("hidden");
   }
 }

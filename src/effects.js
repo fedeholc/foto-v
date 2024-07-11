@@ -1,6 +1,10 @@
 import eventBus from "./eventBus.js";
 import { FFmpeg } from "@diffusion-studio/ffmpeg-js";
-import { execCreateVideo, concatAllVideos } from "./video.js";
+import {
+  execCreateVideo,
+  concatAllVideos,
+  execCreateStillImageVideo,
+} from "./video.js";
 import { CONFIG } from "./config.js";
 
 /**
@@ -54,7 +58,8 @@ export async function createZoomVideo(
   let videosReversed = [];
   let videosForward = [];
 
-  //TODO: acá (y en la funciòn de create pan) tengo que corregir lo de lastframe repeat, o bien checkiar si es el ultimo chunk (ultimo paso del for) y ahi hacer que repita, o sino quitarlo del función y hacer otra nueva que dado un frame genere un vid de x tiempo para juntarlo...
+    let lastFrame;
+    let firstFrame;
 
   for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = [];
@@ -82,6 +87,11 @@ export async function createZoomVideo(
       );
     }
 
+    if (i === 0) {
+      firstFrame = videoFrames[0];
+    }
+    lastFrame = videoFrames[videoFrames.length - 1];
+
     await writeImageFiles(ffmpeg, videoFrames);
 
     await ffmpeg.writeFile(
@@ -101,12 +111,12 @@ export async function createZoomVideo(
       direction === "ZI"
     ) {
       videosForward.push(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
+        await execCreateVideo(ffmpeg, frameRate, false)
       );
     }
     if (direction === "ZOZI" || direction === "ZIZO") {
       videosReversed.unshift(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
+        await execCreateVideo(ffmpeg, frameRate, true)
       );
     }
     if (direction === "ZO" || direction === "ZI") {
@@ -116,6 +126,25 @@ export async function createZoomVideo(
       videos = videosForward.concat(videosReversed);
     }
     deleteImageFiles(ffmpeg, videoFrames.length);
+  }
+
+  if (lastFrameRepeat > 0 && lastFrame && firstFrame) {
+    let imageFrame = "";
+    if (direction === "ZO" || direction === "ZI") {
+      imageFrame = lastFrame;
+    }
+    if (direction === "ZOZI" || direction === "ZIZO") {
+      imageFrame = firstFrame;
+    }
+
+    let rta = await execCreateStillImageVideo(
+      ffmpeg,
+      frameRate,
+      lastFrameRepeat,
+      imageFrame
+    );
+
+    videos.push(rta);
   }
 
   let resultVideo = await concatAllVideos(ffmpeg, videos);
@@ -186,6 +215,7 @@ export function getPanValues() {
 /**
  * @param {string[]} videoFrames
  * @returns {Promise<void>}
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
  */
 async function writeImageFiles(ffmpeg, videoFrames) {
   return new Promise((resolve, reject) => {
@@ -205,6 +235,7 @@ async function writeImageFiles(ffmpeg, videoFrames) {
 /**
  * @param {number} numberOfFrames
  * @returns {Promise<void>}
+ * @param {FFmpeg<import("@diffusion-studio/ffmpeg-js").FFmpegConfiguration>} ffmpeg
  */
 async function deleteImageFiles(ffmpeg, numberOfFrames) {
   return new Promise((resolve, reject) => {
@@ -274,11 +305,11 @@ export async function createPanVideo(
     );
 
     if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
-      videosForward.push(await execCreateVideo(ffmpeg, frameRate, 0, false));
+      videosForward.push(await execCreateVideo(ffmpeg, frameRate, false));
     }
 
     if (direction === "RL" || direction === "LRRL" || direction === "RLLR") {
-      videosReversed.unshift(await execCreateVideo(ffmpeg, frameRate, 0, true));
+      videosReversed.unshift(await execCreateVideo(ffmpeg, frameRate, true));
     }
 
     if (direction === "LR") {
@@ -298,41 +329,22 @@ export async function createPanVideo(
   }
 
   if (lastFrameRepeat > 0 && lastFrame && firstFrame) {
-    await ffmpeg.writeFile("lastFrame.png", lastFrame);
-    await ffmpeg.writeFile("firstFrame.png", firstFrame);
-
-    let filename = "";
-
+    let imageFrame = "";
     if (direction === "LR" || direction === "RLLR") {
-      filename = "lastFrame.png";
+      imageFrame = lastFrame;
     }
     if (direction === "RL" || direction === "LRRL") {
-      filename = "firstFrame.png";
+      imageFrame = firstFrame;
     }
 
-    //TODO: creo que quedó ok, faltaría ordenar el código, hacer una funcion para crear el video y luego reutilizarla con una nueva opción para crear la still image
-    //TODO: hacer lo mismo en createZoom
-    
-    await ffmpeg.exec([
-      "-loop",
-      "1",
-      "-i",
-      `${filename}`,
-      "-c:v",
-      "libx264",
-      "-t",
-      `${lastFrameRepeat}`,
-      "-pix_fmt",
-      "yuv420p",
-      "-r",
-      `${frameRate}`,
-      "-shortest",
-      "output.mp4",
-    ]);
+    let rta = await execCreateStillImageVideo(
+      ffmpeg,
+      frameRate,
+      lastFrameRepeat,
+      imageFrame
+    );
 
-    let rta = ffmpeg.readFile("output.mp4");
     videos.push(rta);
-    ffmpeg.deleteFile("output.mp4");
   }
   let resultVideo = await concatAllVideos(ffmpeg, videos);
   return resultVideo;
