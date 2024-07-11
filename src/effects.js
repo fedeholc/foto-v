@@ -243,6 +243,10 @@ export async function createPanVideo(
   let videos = [];
   let videosReversed = [];
   let videosForward = [];
+
+  let lastFrame;
+  let firstFrame;
+
   for (let i = 0; i < totalFrames; i += CONFIG.chunkSize) {
     let videoFrames = await createFramesPanByChunks(
       canvas,
@@ -251,6 +255,11 @@ export async function createPanVideo(
       i,
       i + CONFIG.chunkSize
     );
+
+    if (i === 0) {
+      firstFrame = videoFrames[0];
+    }
+    lastFrame = videoFrames[videoFrames.length - 1];
 
     await writeImageFiles(ffmpeg, videoFrames);
 
@@ -265,15 +274,11 @@ export async function createPanVideo(
     );
 
     if (direction === "LR" || direction === "LRRL" || direction === "RLLR") {
-      videosForward.push(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, false)
-      );
+      videosForward.push(await execCreateVideo(ffmpeg, frameRate, 0, false));
     }
 
     if (direction === "RL" || direction === "LRRL" || direction === "RLLR") {
-      videosReversed.unshift(
-        await execCreateVideo(ffmpeg, frameRate, lastFrameRepeat, true)
-      );
+      videosReversed.unshift(await execCreateVideo(ffmpeg, frameRate, 0, true));
     }
 
     if (direction === "LR") {
@@ -288,7 +293,46 @@ export async function createPanVideo(
     if (direction === "RLLR") {
       videos = videosReversed.concat(videosForward);
     }
+
     deleteImageFiles(ffmpeg, videoFrames.length);
+  }
+
+  if (lastFrameRepeat > 0 && lastFrame && firstFrame) {
+    await ffmpeg.writeFile("lastFrame.png", lastFrame);
+    await ffmpeg.writeFile("firstFrame.png", firstFrame);
+
+    let filename = "";
+
+    if (direction === "LR" || direction === "RLLR") {
+      filename = "lastFrame.png";
+    }
+    if (direction === "RL" || direction === "LRRL") {
+      filename = "firstFrame.png";
+    }
+
+    //TODO: creo que quedó ok, faltaría ordenar el código, hacer una funcion para crear el video y luego reutilizarla con una nueva opción para crear la still image
+    //TODO: hacer lo mismo en createZoom
+    
+    await ffmpeg.exec([
+      "-loop",
+      "1",
+      "-i",
+      `${filename}`,
+      "-c:v",
+      "libx264",
+      "-t",
+      `${lastFrameRepeat}`,
+      "-pix_fmt",
+      "yuv420p",
+      "-r",
+      `${frameRate}`,
+      "-shortest",
+      "output.mp4",
+    ]);
+
+    let rta = ffmpeg.readFile("output.mp4");
+    videos.push(rta);
+    ffmpeg.deleteFile("output.mp4");
   }
   let resultVideo = await concatAllVideos(ffmpeg, videos);
   return resultVideo;
